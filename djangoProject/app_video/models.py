@@ -15,6 +15,7 @@ class Quiz(models.Model):
     answer_per = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'quiz'
 
@@ -27,6 +28,7 @@ class Sentence(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'sentence'
 
@@ -38,6 +40,7 @@ class SentenceQuiz(models.Model):
     is_wrong = models.IntegerField(blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'sentence_quiz'
 
@@ -49,6 +52,7 @@ class Users(models.Model):
     state = models.IntegerField(blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'users'
 
@@ -63,6 +67,7 @@ class Video(models.Model):
     img = models.TextField(blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'video'
 
@@ -75,6 +80,7 @@ class Word(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'word'
 
@@ -86,11 +92,12 @@ class WordQuiz(models.Model):
     is_wrong = models.IntegerField(blank=True, null=True)
 
     class Meta:
+        app_label = 'app_video'
         managed = False
         db_table = 'word_quiz'
 
 class Test(models.Model):
-    id = models.CharField(max_length=50, blank=True, null=True)
+    id = models.CharField(primary_key=True, max_length=50)
     name = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
