@@ -4,4 +4,4 @@ from .models import Test
 # Create your views here.
 def test(request):
     tests = Test.objects.all()
-    return render(request, 'index.html', {"tests":tests})
+    return render(request, 'app_video/index.html', {"tests":tests})
