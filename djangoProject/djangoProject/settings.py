@@ -78,9 +78,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ES',
-        'USER' : 'root',
-        'PASSWORD' : 'dPdms7319!',
-        'HOST' : '127.0.0.1',
+        'USER' : 'admin',
+        'PASSWORD' : 'gksdldma',
+        'HOST' : 'englishsolution-database.cz466kkm8ji8.ap-northeast-2.rds.amazonaws.com',
         'PORT' : '3306',
     }
 }

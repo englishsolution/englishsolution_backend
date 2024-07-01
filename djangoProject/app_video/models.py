@@ -3,9 +3,10 @@
 #   * Rearrange models' order
 #   * Make sure each model has one field with primary_key=True
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table  
+#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+
 
 class Quiz(models.Model):
     quiz_id = models.AutoField(primary_key=True)
@@ -15,7 +16,6 @@ class Quiz(models.Model):
     answer_per = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'quiz'
 
@@ -28,7 +28,6 @@ class Sentence(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'sentence'
 
@@ -36,13 +35,21 @@ class Sentence(models.Model):
 class SentenceQuiz(models.Model):
     sentence_quiz_id = models.AutoField(primary_key=True)
     quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.
+    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.       
     is_wrong = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'sentence_quiz'
+
+
+class Test(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'test'
 
 
 class Users(models.Model):
@@ -52,7 +59,6 @@ class Users(models.Model):
     state = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'users'
 
@@ -67,7 +73,6 @@ class Video(models.Model):
     img = models.TextField(blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'video'
 
@@ -80,7 +85,6 @@ class Word(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'word'
 
@@ -88,18 +92,9 @@ class Word(models.Model):
 class WordQuiz(models.Model):
     word_quiz_id = models.AutoField(primary_key=True)
     quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.
+    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.       
     is_wrong = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        app_label = 'app_video'
         managed = False
         db_table = 'word_quiz'
-
-class Test(models.Model):
-    id = models.CharField(primary_key=True, max_length=50)
-    name = models.CharField(max_length=50, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'test'
