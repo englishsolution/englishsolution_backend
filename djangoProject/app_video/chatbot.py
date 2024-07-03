@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
-from .models import Test
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
@@ -37,7 +36,7 @@ def chatbot(request, message_history=[]):
             }
         )
         print(message_history[-1]["content"])
-       # return message_history[-1]
+       # return message_history[-1]["content"]
     return HttpResponse(message_history[-1]["content"])
 
 
@@ -49,7 +48,4 @@ def chatbot(request, message_history=[]):
 #     return render(request, "app_video/chatbot.html")
 
 
-# Create your views here.
-def test(request):
-    tests = Test.objects.all()
-    return render(request, 'app_video/index.html', {"tests":tests})
+
