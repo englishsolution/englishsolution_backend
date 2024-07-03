@@ -9,10 +9,13 @@ load_dotenv(verbose=True) #env 파일에서 api_key를 가져옴 ######## 배포
 API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=API_KEY)
 
-#request 를 받아 response를 응답하는 chatbot
+#chatbot을 열면 실행되는 메소드
 def chatbot(request, message_history=[]):
-    for i in range(2):
-        request= input("prompt 입력: ")
+    while(True):
+        request = input("prompt 입력: ") # 임시 prompt
+
+        if request == "exit":
+            break
 
         message_history.append(  # to consecutive message
             {
@@ -30,12 +33,12 @@ def chatbot(request, message_history=[]):
 
         message_history.append(
             {
-                "role":"assistant", "content": response.choices[0].message.content,
+                "role": "assistant", "content": response.choices[0].message.content,
             }
         )
-        print(message_history[-1])
+        print(message_history[-1]["content"])
        # return message_history[-1]
-    return HttpResponse(message_history)
+    return HttpResponse(message_history[-1]["content"])
 
 
 # def query_view_chatbot(request):
