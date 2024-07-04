@@ -71,6 +71,7 @@ class Video(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
     view_count = models.IntegerField(blank=True, null=True)
     img = models.TextField(blank=True, null=True)
+    script = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False

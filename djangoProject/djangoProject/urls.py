@@ -22,5 +22,7 @@ from app_video import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('test/', views.test)
+    path('test/', views.test),
+    path('insert_url/', views.insert_url, name='insert_url'),
+    path('processing_url/', views.processing_url, name='processing_url'),
 ]
