@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let mediaRecorder;
+            let audioChunks = [];
+
+            const startRecordBtn = document.getElementById('start-record-btn');
+            const stopRecordBtn = document.getElementById('stop-record-btn');
+            const audioPlayback = document.getElementById('audio-playback');
+
+            startRecordBtn.addEventListener('click', () => {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.start();
+
+                        mediaRecorder.addEventListener('dataavailable', event => {
+                            audioChunks.push(event.data);
+                        });
+
+                        mediaRecorder.addEventListener('stop', () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            audioPlayback.src = URL.createObjectURL(audioBlob);
+
+                            // Convert audioBlob to base64
+                            const reader = new FileReader();
+                            reader.onloadend = function() {
+                                const base64data = reader.result.split(',')[1];
+
+                                // Send base64data to server
+                                const formData = new FormData();
+                                formData.append('audio', base64data);
+
+                                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                                formData.append('csrfmiddlewaretoken', csrfToken);  // Add CSRF token
+
+                                fetch('/processing_speaking/', {
+                                    method: 'POST',
+                                    body: formData
+                                }).then(response => response.json())
+                                  .then(data => console.log(data))
+                                  .catch(error => console.error('Error:', error));
+                            };
+                            reader.readAsDataURL(audioBlob);
+                        });
+
+                        stopRecordBtn.disabled = false;
+                        startRecordBtn.disabled = true;
+                    });
+            });
+
+            stopRecordBtn.addEventListener('click', () => {
+                mediaRecorder.stop();
+                stopRecordBtn.disabled = true;
+                startRecordBtn.disabled = false;
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Record your voice</h1>
+    <button id="start-record-btn">Start Recording</button>
+    <button id="stop-record-btn" disabled>Stop Recording</button>
+    <audio id="audio-playback" controls></audio>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+    </form>
+</body>
+</html>

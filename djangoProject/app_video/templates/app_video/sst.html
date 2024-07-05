@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음성 인식</title>
+</head>
+<body>
+    <h2>음성을 텍스트로 변환하기</h2>
+
+    <!-- 녹음 버튼 -->
+    <button id="recordButton">녹음 시작</button>
+
+    <!-- 녹음된 오디오 재생 -->
+    <audio id="audio" controls></audio>
+
+    <!-- 변환된 텍스트 표시 -->
+    <div id="output"></div>
+
+    <script>
+        // 녹음 버튼 클릭 시
+        document.getElementById('recordButton').onclick = function() {
+            var recordButton = document.getElementById('recordButton');
+            var audio = document.getElementById('audio');
+            var output = document.getElementById('output');
+
+            var mediaRecorder;
+            var chunks = [];
+
+            // 녹음 시작
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+
+                recordButton.textContent = '녹음 중지';
+
+                // 녹음 중지 시 이벤트 처리
+                mediaRecorder.onstop = function() {
+                    var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+                    chunks = [];
+                    var audioURL = URL.createObjectURL(blob);
+                    audio.src = audioURL;
+
+                    // 서버로 오디오 데이터 전송
+                    var formData = new FormData();
+                    formData.append('audio', blob);
+
+                    // AJAX를 이용해 Django 서버로 전송
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/convert_audio/', true);
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            output.textContent = xhr.responseText;
+                        } else {
+                            output.textContent = '서버 에러 발생';
+                        }
+                    };
+                    xhr.send(formData);
+                };
+
+                // 데이터 청크 수집
+                mediaRecorder.ondataavailable = function(e) {
+                    chunks.push(e.data);
+                };
+            })
+            .catch(function(err) {
+                console.log('녹음 권한이 없습니다: ' + err);
+            });
+
+            // 녹음 중지
+            recordButton.onclick = function() {
+                mediaRecorder.stop();
+                recordButton.textContent = '녹음 시작';
+            };
+        };
+    </script>
+</body>
+</html>
