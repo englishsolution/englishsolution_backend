@@ -43,10 +43,10 @@ def chatbot(request, message_history):
 
 def request_to_chatbot(request):
     if request.method == "POST":
-        prompt = str(request.POST["prompt"])
+        prompt = str(request.POST["message"])
         response = chatbot(prompt, message_history)
         print("in requesttochatbot:", response)
-        return JsonResponse({'response': response})
+        return JsonResponse({'reply': response})
 
 
 
