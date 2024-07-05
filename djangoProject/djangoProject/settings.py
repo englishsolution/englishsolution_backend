@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-#^ihsqlb50ejbjwq=)@r!+o9x8*hp&ac===e5hs6iuhq$byb5_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['15.165.135.23'] # 탄력적 주소만 허용 #if not perform, change '*'
+ALLOWED_HOSTS = ['15.165.135.23','127.0.0.1'] # 탄력적 주소만 허용 #if not perform, change '*'
+
 
 # .env 파일 설정
 import environ
