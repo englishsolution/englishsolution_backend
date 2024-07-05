@@ -48,6 +48,7 @@ def processing_url(request):
                 has_english = any(transcript.language_code == 'en' for transcript in transcript_list)
                 has_korean = any(transcript.language_code == 'ko' for transcript in transcript_list)
                 transcription_en=[]
+                transcription_ko=[]
                 if has_english :
                     print('영어 자막 있음')#영어 자막 있는 경우
                     transcription_en = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
@@ -89,33 +90,19 @@ def processing_url(request):
                     script = ' '.join([content['text'] for content in transcription_ko])
                     print(script)
                 else :
-                    print('한글 자막 없음') #한글 자막 없는 경우(보류....)
-                    texts_en_key=texts = [d["text"] for d in transcription_en]
-                    joined_text_en = '$'.join(texts)
-                    print(joined_text_en)
+                    print('한글 자막 없음')
 
                     #joined_text만 따로 번역
                     response = client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "user", "content": f'{joined_text_en} Translate this whole sentence into Korean (do not erase $ characters)'},
+                            {"role": "user", "content": f'{transcription_en} Translate only the values corresponding to \'text\' into Korean ah its getting so laid"'},
                         ],
-                        max_tokens=60,
                         temperature=0.7
                     )
                     # 응답에서 번역된 문장 추출
-                    joined_text_ko=response.choices[0].message.content
-                    texts_ko=joined_text_ko.split(sep='$')
-                    print(response)
-
-                    # #한국어 trascription_ko 만들기
-                    transcription_ko=[]
-                    for content, text_ko in zip(transcription_en, texts_ko) :
-                        text =text_ko
-                        start = content['start'],
-                        duration = content['duration']
-                        transcription_ko.append({'text': text, 'start': start, 'duration': duration})
-                    print(transcription_ko)
+                    print('응답에서 번역된 문장 추출')
+                    transcription_ko = response.choices[0].message.content
 
                 #title 정하기
                 request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video."
