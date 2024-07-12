@@ -56,8 +56,7 @@ def processing_url(request):
                     script = ' '.join([content['text'] for content in transcription_en])
                     print(script)
                 else :
-                    print('영어 자막 없음')
-                    #영어 자막 없는 경우
+                    print('영어 자막 없음')#영어 자막 없는 경우
                     # YouTube에서 오디오 스트림 다운로드
                     yt = YouTube(url)
                     stream = yt.streams.filter(only_audio=True).first()
@@ -84,12 +83,12 @@ def processing_url(request):
                     print(transcription_en)
 
                 #한글자막 확인
-                if None:
-                    print('한글 자막 있음') #한글 자막 있는 경우
+                if has_korean:#한글 자막 있는 경우
+                    print('한글 자막 있음') 
                     transcription_ko = YouTubeTranscriptApi.get_transcript(video_id, languages=['ko'])
                     script = ' '.join([content['text'] for content in transcription_ko])
                     print(script)
-                else :
+                else :#한글 자막 없는 경우
                     print('한글 자막 없음')
 
                     #joined_text만 따로 번역
@@ -103,6 +102,7 @@ def processing_url(request):
                     # 응답에서 번역된 문장 추출
                     print('응답에서 번역된 문장 추출')
                     transcription_ko = response.choices[0].message.content
+                    print(transcription_ko)
 
                 #title 정하기
                 request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video."

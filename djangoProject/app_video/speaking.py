@@ -39,6 +39,8 @@ def processing_sst(request):
 
 
 def processing_speaking(request):
+    if request.method == 'POST':
+        print('processing_speaking 1st')
     # 문장 발음 기호
     script = "Nice to meet you!"
     request_content = f"Pronunciation of this sentence {script}"
@@ -56,18 +58,19 @@ def processing_speaking(request):
     # 생성된 응답 출력
     print("발음기호 : ", response_text)
 
-
-
     print('processing_speaking')
-    if request.method == 'POST' and request.POST.get('audio'):
-        print('ok')
-        base64_audio = request.POST.get('audio')
+    if request.method == 'POST' and 'audio' in request.FILES:
+        print('test')
+        # request.POST.get('audio')를 통해 데이터 가져오기
+        audio_data = request.POST.get('audio')
+
+        #audio_data_decoded  = base64.b64decode(audio_data).decode("utf8")
 
         # base64로 인코딩된 데이터를 디코딩하여 파일로 저장하거나 처리하는 예시
         try:
-
             openApiURL = 'http://aiopen.etri.re.kr:8000/WiseASR/Pronunciation'  # 영어
             accessKey = ETRI_API_KEY
+            print(accessKey)
             languageCode = "english"
             script = "Nice to meet you!"
 
@@ -75,11 +78,12 @@ def processing_speaking(request):
                 "argument": {
                     "language_code": languageCode,
                     "script": script,
-                    "audio": base64_audio
+                    "audio": audio_data
                 }
             }
-
+            print('test2')
             http = urllib3.PoolManager()
+            print('test3')
             response = http.request(
                 "POST",
                 openApiURL,
@@ -88,13 +92,14 @@ def processing_speaking(request):
             )
 
             print("[responseCode] " + str(response.status))
-            print("[responBody]")
+            print("[responB"
+                  "ody]")
             print(str(response.data, "utf-8"))
             return JsonResponse({'message': 'Audio file processed successfully.'})
 
 
         except Exception as e:
-            print(e)
+            print('error')
             return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse({'error': 'Invalid request method or no audio data received.'}, status=400)

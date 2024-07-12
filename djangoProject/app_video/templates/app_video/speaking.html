@@ -25,28 +25,23 @@
 
                         mediaRecorder.addEventListener('stop', () => {
                             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                            audioPlayback.src = URL.createObjectURL(audioBlob);
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            audioPlayback.src = audioUrl;
 
-                            // Convert audioBlob to base64
-                            const reader = new FileReader();
-                            reader.onloadend = function() {
-                                const base64data = reader.result.split(',')[1];
+                            // Send audioBlob to server
+                            const formData = new FormData();
+                            formData.append('audio', audioBlob, 'recording.wav');
 
-                                // Send base64data to server
-                                const formData = new FormData();
-                                formData.append('audio', base64data);
-
-                                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                                formData.append('csrfmiddlewaretoken', csrfToken);  // Add CSRF token
-
-                                fetch('/processing_speaking/', {
-                                    method: 'POST',
-                                    body: formData
-                                }).then(response => response.json())
-                                  .then(data => console.log(data))
-                                  .catch(error => console.error('Error:', error));
-                            };
-                            reader.readAsDataURL(audioBlob);
+                            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                            fetch('/processing_speaking/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': csrfToken
+                                },
+                                body: formData
+                            }).then(response => response.json())
+                              .then(data => console.log(data))
+                              .catch(error => console.error('Error:', error));
                         });
 
                         stopRecordBtn.disabled = false;
@@ -67,7 +62,7 @@
     <button id="start-record-btn">Start Recording</button>
     <button id="stop-record-btn" disabled>Stop Recording</button>
     <audio id="audio-playback" controls></audio>
-    <form method="post" enctype="multipart/form-data">
+    <form method="post">
         {% csrf_token %}
     </form>
 </body>
