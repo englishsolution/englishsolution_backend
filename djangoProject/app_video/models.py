@@ -7,7 +7,6 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-
 class Quiz(models.Model):
     quiz_id = models.AutoField(primary_key=True)
     user = models.ForeignKey('Users', models.DO_NOTHING, to_field='user_id', blank=True, null=True)
@@ -16,8 +15,8 @@ class Quiz(models.Model):
     answer_per = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'quiz'
+
 
 
 class Sentence(models.Model):
@@ -28,18 +27,15 @@ class Sentence(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'sentence'
-
 
 class SentenceQuiz(models.Model):
     sentence_quiz_id = models.AutoField(primary_key=True)
     quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.       
+    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.
     is_wrong = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'sentence_quiz'
 
 
@@ -48,9 +44,7 @@ class Test(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'test'
-
 
 class Users(models.Model):
     user_id = models.CharField(unique=True, max_length=50, blank=True, null=True)
@@ -59,9 +53,7 @@ class Users(models.Model):
     state = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'users'
-
 
 class Video(models.Model):
     video_id = models.AutoField(primary_key=True)
@@ -73,9 +65,7 @@ class Video(models.Model):
     img = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'video'
-
 
 class Word(models.Model):
     word_id = models.AutoField(primary_key=True)
@@ -85,16 +75,13 @@ class Word(models.Model):
     save_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'word'
-
 
 class WordQuiz(models.Model):
     word_quiz_id = models.AutoField(primary_key=True)
     quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.       
+    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.
     is_wrong = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'word_quiz'

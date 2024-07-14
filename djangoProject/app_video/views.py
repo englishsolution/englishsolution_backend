@@ -1,4 +1,5 @@
 from django.http import JsonResponse, HttpResponse
 
 def test(request):
-    return HttpResponse("hello world!")
+    if request.method == 'GET':
+        return JsonResponse({"message","test"})
