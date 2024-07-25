@@ -16,13 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from app_video import views, speaking
+from app_video import views, speaking, scripts
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('test/', views.test),
-    path('insert_url/', views.insert_url, name='insert_url'),
-    path('processing_url/', views.processing_url, name='processing_url'),
+    path('test/', scripts.test, name='test'),
+    path('insert_url/', scripts.insert_url, name='insert_url'),
+    path('processing_url/', scripts.processing_url, name='processing_url'),
     path('speaking/', speaking.speaking, name='speaking'),
     path('processing_speaking/', speaking.processing_speaking, name='processing_speaking'),
     path('sst/', speaking.sst),
