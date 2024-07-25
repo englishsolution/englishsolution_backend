@@ -8,12 +8,117 @@
 from django.db import models
 
 
+class AuthGroup(models.Model):
+    name = models.CharField(unique=True, max_length=80)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_group'
+
+
+class AuthGroupPermissions(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+    permission = models.ForeignKey('AuthPermission', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_group_permissions'
+        unique_together = (('group', 'permission'),)
+
+
+class AuthPermission(models.Model):
+    name = models.CharField(max_length=50)
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING)
+    codename = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_permission'
+        unique_together = (('content_type', 'codename'),)
+
+
+class AuthUser(models.Model):
+    password = models.CharField(max_length=128)
+    last_login = models.DateTimeField()
+    is_superuser = models.IntegerField()
+    username = models.CharField(unique=True, max_length=30)
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    email = models.CharField(max_length=75)
+    is_staff = models.IntegerField()
+    is_active = models.IntegerField()
+    date_joined = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user'
+
+
+class AuthUserGroups(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_groups'
+        unique_together = (('user', 'group'),)
+
+
+class AuthUserUserPermissions(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_user_permissions'
+        unique_together = (('user', 'permission'),)
+
+
+class DjangoAdminLog(models.Model):
+    action_time = models.DateTimeField()
+    object_id = models.TextField(blank=True, null=True)
+    object_repr = models.CharField(max_length=200)
+    action_flag = models.PositiveSmallIntegerField()
+    change_message = models.TextField()
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'django_admin_log'
+
+
+class DjangoContentType(models.Model):
+    name = models.CharField(max_length=100)
+    app_label = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'django_content_type'
+        unique_together = (('app_label', 'model'),)
+
+
+class DjangoMigrations(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
 class Quiz(models.Model):
     quiz_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('Users', models.DO_NOTHING, to_field='user_id', blank=True, null=True)
-    video = models.ForeignKey('Video', models.DO_NOTHING, blank=True, null=True)
     quiz_date = models.DateTimeField(blank=True, null=True)
     answer_per = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    user = models.ForeignKey('Users', models.DO_NOTHING, to_field='user_id', blank=True, null=True)
+    video = models.ForeignKey('Video', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -22,10 +127,10 @@ class Quiz(models.Model):
 
 class Sentence(models.Model):
     sentence_id = models.AutoField(primary_key=True)
-    video = models.ForeignKey('Video', models.DO_NOTHING, blank=True, null=True)
     sentence_eg = models.CharField(max_length=500, blank=True, null=True)
     sentence_kr = models.CharField(max_length=500, blank=True, null=True)
     save_date = models.DateTimeField(blank=True, null=True)
+    video = models.ForeignKey('Video', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -34,9 +139,9 @@ class Sentence(models.Model):
 
 class SentenceQuiz(models.Model):
     sentence_quiz_id = models.AutoField(primary_key=True)
-    quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.       
+    quiz = models.JSONField(blank=True, null=True)
     is_wrong = models.IntegerField(blank=True, null=True)
+    quiz_0 = models.ForeignKey(Quiz, models.DO_NOTHING, db_column='quiz_id', blank=True, null=True)  # Field renamed because of name conflict.
 
     class Meta:
         managed = False
@@ -53,6 +158,7 @@ class Test(models.Model):
 
 
 class Users(models.Model):
+    id = models.BigAutoField(primary_key=True)
     user_id = models.CharField(unique=True, max_length=50, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)
     passwd = models.CharField(max_length=50, blank=True, null=True)
@@ -65,12 +171,12 @@ class Users(models.Model):
 
 class Video(models.Model):
     video_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(Users, models.DO_NOTHING, to_field='user_id', blank=True, null=True)
     link = models.CharField(max_length=500, blank=True, null=True)
     title = models.CharField(max_length=50, blank=True, null=True)
     save_date = models.DateTimeField(blank=True, null=True)
     view_count = models.IntegerField(blank=True, null=True)
     img = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(Users, models.DO_NOTHING, to_field='user_id', blank=True, null=True)
     script = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -80,10 +186,10 @@ class Video(models.Model):
 
 class Word(models.Model):
     word_id = models.AutoField(primary_key=True)
-    video = models.ForeignKey(Video, models.DO_NOTHING, blank=True, null=True)
     word_eg = models.CharField(max_length=500, blank=True, null=True)
     word_kr = models.CharField(max_length=500, blank=True, null=True)
     save_date = models.DateTimeField(blank=True, null=True)
+    video = models.ForeignKey(Video, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -92,9 +198,9 @@ class Word(models.Model):
 
 class WordQuiz(models.Model):
     word_quiz_id = models.AutoField(primary_key=True)
-    quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.       
+    quiz = models.JSONField(blank=True, null=True)
     is_wrong = models.IntegerField(blank=True, null=True)
+    quiz_0 = models.ForeignKey(Quiz, models.DO_NOTHING, db_column='quiz_id', blank=True, null=True)  # Field renamed because of name conflict.
 
     class Meta:
         managed = False
