@@ -1,7 +1,7 @@
-from django.urls import path, include
-from . import chatbot,views
+from django.urls import path
+from . import view
 
 urlpatterns = [
-    path('', chatbot.request_to_chatbot, name='chatbot'),
-    path('test',views.test)
+    path('chatbot', view.request_to_chatbot, name='chatbot'),
+
 ]
