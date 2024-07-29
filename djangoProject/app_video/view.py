@@ -16,9 +16,9 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
         #elif mode=="conversation": # 영상의 주제를 가지고 대화하는 챗봇
          #   response = conversation_chatbot(prompt)
         elif mode == "word":  # 랜덤 단어를 제공해주는 챗봇
-            diffculty = str(request.POST.get("diffculty"))
-            response = word_chatbot(diffculty)
-        return JsonResponse({'reply': response})
+            difficulty = str(request.POST.get("difficulty"))
+            response = word_chatbot(difficulty)
+        return JsonResponse({'reply': response},status=200)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
