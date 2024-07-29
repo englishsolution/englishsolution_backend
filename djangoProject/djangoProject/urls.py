@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from app_video import views, speaking, scripts
+from app_video import views, speaking, scripts, quiz
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +25,6 @@ urlpatterns = [
     path('processing_url/', scripts.processing_url, name='processing_url'),
     path('speaking/', speaking.speaking, name='speaking'),
     path('processing_speaking/', speaking.processing_speaking, name='processing_speaking'),
-    path('sst/', speaking.sst),
+    path('select_quiz/', quiz.select_quiz, name='select_quiz'),
+    path('all_sentence_quiz/', quiz.all_sentence_quiz, name='all_sentence_quiz'),
 ]

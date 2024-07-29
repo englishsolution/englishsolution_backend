@@ -4,7 +4,6 @@ from datetime import datetime
 import openai
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from moviepy.audio.io.AudioFileClip import AudioFileClip
 from pytube import YouTube
 
 from .models import Test

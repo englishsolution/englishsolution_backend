@@ -1,69 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Recorder</title>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let mediaRecorder;
-            let audioChunks = [];
-
-            const startRecordBtn = document.getElementById('start-record-btn');
-            const stopRecordBtn = document.getElementById('stop-record-btn');
-            const audioPlayback = document.getElementById('audio-playback');
-
-            startRecordBtn.addEventListener('click', () => {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(stream => {
-                        mediaRecorder = new MediaRecorder(stream);
-                        mediaRecorder.start();
-
-                        mediaRecorder.addEventListener('dataavailable', event => {
-                            audioChunks.push(event.data);
-                        });
-
-                        mediaRecorder.addEventListener('stop', () => {
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                            const audioUrl = URL.createObjectURL(audioBlob);
-                            audioPlayback.src = audioUrl;
-
-                            // Send audioBlob to server
-                            const formData = new FormData();
-                            formData.append('audio', audioBlob, 'recording.wav');
-
-                            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                            fetch('/processing_speaking/', {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRFToken': csrfToken
-                                },
-                                body: formData
-                            }).then(response => response.json())
-                              .then(data => console.log(data))
-                              .catch(error => console.error('Error:', error));
-                        });
-
-                        stopRecordBtn.disabled = false;
-                        startRecordBtn.disabled = true;
-                    });
-            });
-
-            stopRecordBtn.addEventListener('click', () => {
-                mediaRecorder.stop();
-                stopRecordBtn.disabled = true;
-                startRecordBtn.disabled = false;
-            });
-        });
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이크 녹음</title>
 </head>
 <body>
-    <h1>Record your voice</h1>
-    <button id="start-record-btn">Start Recording</button>
-    <button id="stop-record-btn" disabled>Stop Recording</button>
-    <audio id="audio-playback" controls></audio>
-    <form method="post">
-        {% csrf_token %}
-    </form>
+  <button id="start">녹음 시작</button>
+  <button id="stop">녹음 종료</button>
+  <a id="download">다운로드</a>
+  <button id="export">이미지 추출</button>
+  <br><br>
+  <audio controls>녹음된 소리를 재생할 audio 엘리먼트</audio>
+  <div id="waveform"></div>
+  <div id="waveform-result"></div>
+
+  <script src="https://unpkg.com/wavesurfer.js@6.1.0/dist/wavesurfer.js"></script>
+  <script src="https://unpkg.com/wavesurfer.js@6.1.0/dist/plugin/wavesurfer.microphone.min.js"></script>
+  <script>
+    // https://curryyou.tistory.com/446
+    // https://wavesurfer-js.org/example/microphone/index.html
+    const MEDIA_LABEL = 'PLEOMAX';
+    const findMediaDevices = async (label) => {
+      const allMediaDevices = await navigator.mediaDevices.enumerateDevices();
+      const devices = allMediaDevices.filter((device) => device.label.toLowerCase().indexOf(label.toLowerCase()) !== -1);
+      const groupById = devices.reduce((acc, val) => {
+        const groupd = acc.find(({groupId}) => groupId === val.groupId) || (acc.push({groupId: val.groupId, devices: []}), acc[acc.length - 1]);
+        groupd.devices.push(val);
+        return acc;
+      }, []);
+      return groupById;
+    }
+    // wavesurfer.microphone.on('deviceReady', function(stream) { console.log('Device ready!', stream); });
+
+    const main = async () => { try {
+      const mediaDevices = await findMediaDevices(MEDIA_LABEL);
+      if (mediaDevices.length > 1) return console.warn('To Many Media Devices !')
+      const targetMedia = mediaDevices[0];
+      const audioDevice = targetMedia.devices.find(({kind}) => kind === 'audioinput');
+      if (!audioDevice) return console.warn('Not Found Audio Media Device:' + MEDIA_LABEL);
+      
+      const audioStream = await navigator.mediaDevices.getUserMedia({audio: { deviceId: audioDevice.deviceId }}); 
+      
+      const wavesurfer = WaveSurfer.create({
+        container     : '#waveform',
+        waveColor     : 'black',
+        interact      : false,
+        cursorWidth   : 0,
+        barWidth: 2,
+        barHeight: 1,
+        plugins: [
+          WaveSurfer.microphone.create()
+        ]
+      });
+
+      const $audioEl = document.querySelector("audio"); 
+      const $startBtn = document.getElementById("start"); 
+      const $stopBtn = document.getElementById("stop"); 
+      const $downloadBtn = document.getElementById('download');
+      const $exportBtn = document.getElementById('export');
+
+      let isRecording = false; // 녹음중 상태 변수 
+      let mediaRecorder; // 미디어 녹음기 변수
+      const audioArray = []; // 녹음 데이터 저장 배열 
+
+      $startBtn.onclick = async function (event) {
+        if (isRecording) return;
+        // 마이크 mediaStream 생성: Promise를 반환하므로 async/await 사용 
+        // const mediaStream = await navigator.mediaDevices.getUserMedia({audio: true}); 
+        // MediaRecorder 생성 
+        mediaRecorder = new MediaRecorder(audioStream); 
+        // 이벤트핸들러: 녹음 데이터 취득 처리 
+        mediaRecorder.ondataavailable = (event)=>{
+          // 오디오 데이터가 취득될 때마다 배열에 담아둔다. 
+          audioArray.push(event.data); 
+        } 
+        // 이벤트핸들러: 녹음 종료 처리 & 재생하기 
+        mediaRecorder.onstop = (event)=>{ 
+          // 녹음이 종료되면, 배열에 담긴 오디오 데이터(Blob)들을 합친다: 코덱도 설정해준다. 
+          const blob = new Blob(audioArray, {"type": "audio/wav"}); audioArray.splice(0); 
+          // 기존 오디오 데이터들은 모두 비워 초기화한다. 
+          // Blob 데이터에 접근할 수 있는 주소를 생성한다. 
+          const blobURL = window.URL.createObjectURL(blob); 
+          // audio엘리먼트로 재생한다. 
+          $audioEl.src = blobURL; 
+          $audioEl.play();
+
+          $downloadBtn.href = blobURL;
+          $downloadBtn.download = '220406-audio';
+        } 
+        // 녹음 시작 
+        mediaRecorder.start(); 
+        wavesurfer.microphone.start();
+        isRecording = true; 
+      }
+
+      $stopBtn.onclick = () => {
+        if (!isRecording) return;
+        // 녹음 종료 
+        mediaRecorder.stop(); 
+        wavesurfer.microphone.pause();
+        isRecording = false;
+        //const img = wavesurfer.exportImage();
+        //console.log(img)
+      }
+
+      $exportBtn.onclick = () => {
+        const wavesurfer = WaveSurfer.create({
+          container     : '#waveform-result',
+          waveColor     : 'black',
+          interact      : false,
+          cursorWidth   : 0,
+          barWidth: 2,
+          barHeight: 1
+        });
+        wavesurfer.load('./220406-audio.wav')
+
+        wavesurfer.on('ready', function () {
+          setTimeout(function () {
+            const img = wavesurfer.exportImage();
+            console.log(img)
+          }, 800);
+        });
+      }
+    
+    } catch (error) {
+      throw new Error(error)
+    }}
+    main();
+
+  </script>
 </body>
 </html>

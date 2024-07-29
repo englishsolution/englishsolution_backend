@@ -1,22 +1,11 @@
 import os
 import json
-import base64
 import urllib3
-from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 
-import speech_recognition as sr
 from openai import OpenAI
-from pydub import AudioSegment
-
-from google.cloud import speech_v1p1beta1 as speech
-from google.cloud.speech_v1p1beta1 import types
-import io
-
-from app_video.views import client
 
 load_dotenv(verbose=True) #env 파일에서 api_key를 가져옴 # 배포시 verbose 지우기
 
@@ -92,8 +81,7 @@ def processing_speaking(request):
             )
 
             print("[responseCode] " + str(response.status))
-            print("[responB"
-                  "ody]")
+            print("[responBody]")
             print(str(response.data, "utf-8"))
             return JsonResponse({'message': 'Audio file processed successfully.'})
 
