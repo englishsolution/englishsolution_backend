@@ -15,7 +15,7 @@ API_KEY=os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=API_KEY)
 
 request_content_word = (f"Purpose: Choose the correct korean of a word. "
-                   f"example:"
+                   f"example:\n"
                    f"{{"
                    f"  \"questions\": ["
                    f"    {{"
@@ -31,12 +31,108 @@ request_content_word = (f"Purpose: Choose the correct korean of a word. "
                    f"Answer each word with JSON in the form of an example. Make the total number of words")
 
 request_content_sentence = (f"Purpose: Fill in the blanks. "
-                   f"You're a great blank-making problem maker. For each sentence, you create a problem by specifying an important word or vocabulary as a blank and changing it to '__'."
-                   f"Answer with JSON in the form of \'Question\', \'answer\'")
+                        f"example:\n"
+                        f"{{"
+                        f"  \"questions\": ["
+                        f"    {{"
+                        f"      \"sentence\": \"But I told you to get each one of them an ice cream why did you buy all that bread honey cut me some slack _ ya.\","
+                        f"      \"options\": ["
+                        f"        \"will\","
+                        f"        \"should\","
+                        f"        \"would\","
+                        f"        \"can\""
+                        f"      ],"
+                        f"      \"answer\": \"can\""
+                        f"    }},"
+                        f"    {{"
+                        f"For each sentence, fill in a blank space with an important word or vocabulary and change it to \'_\'."
+                        f" Return JSON in the same format as in the example")
 
 def select_quiz(request):
     videos = Video.objects.all()
     return render(request, 'app_video/select_quiz.html', {"videos": videos})
+
+def all_sentence_quiz(request):
+    if request.method == 'POST':
+        video_id=1
+        sentences=''
+        #문장이 없는 경우
+        count=Sentence.objects.count()
+        if(count==0):
+            print('문장 없음~~')
+            return render(request, 'app_video/select_quiz.html', {
+            })
+        elif (count<=10):
+            print('<=10')
+            sentence_list=Sentence.objects.filter(video_id=video_id).values_list('sentence_eg', flat=False)
+            sentences= " / ".join(sentence_list)
+            print(sentences)
+        elif (count>10):
+            print('>10')
+            random_sentence_list = Sentence.objects.filter(video_id=video_id).order_by(Random()).values_list('sentence_eg', flat=True)[:10]
+            sentences = " / ".join(random_sentence_list)
+            print(sentences)
+
+        # ChatGPT 모델 호출 및 응답 받기
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": f'sentences: {sentences}'+ request_content_sentence}
+            ],
+            max_tokens=1000,
+            temperature=0.8,
+            # response_format 지정하기
+            response_format = {"type": "json_object"}
+        )
+
+        response_text = response.choices[0].message.content
+        print(response_text)
+        json_quiz = json.loads(response_text)
+
+        return render(request, 'app_video/select_quiz.html', {
+                "json_quiz": json_quiz
+        })
+
+def all_word_quiz(request):
+    if request.method == 'POST':
+        video_id=1
+        words=''
+        # 문장이 없는 경우
+        count = Word.objects.count()
+        if (count == 0):
+            print('단어 없음~~')
+            return render(request, 'app_video/select_quiz.html', {
+            })
+        elif (count <= 10):
+            print('<=10')
+            word_list = Word.objects.filter(video_id=video_id).values_list('word_eg', flat=False)
+            words = " / ".join(word_list)
+            print(words)
+        elif (count > 10):
+            print('>10')
+            random_word_list = Word.objects.filter(video_id=video_id).order_by(Random()).values_list('word_eg', flat=True)[:10]
+            words = " / ".join(random_word_list)
+            print(words)
+
+        # ChatGPT 모델 호출 및 응답 받기
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": f'words : {words}'+request_content_word}
+            ],
+            max_tokens=2000,
+            temperature=0.8,
+            # response_format 지정하기
+            response_format={"type": "json_object"}
+        )
+
+        response_text = response.choices[0].message.content
+        print(response_text)
+        json_quiz = json.loads(response_text)
+
+        return render(request, 'app_video/select_quiz.html', {
+            "json_quiz": json_quiz
+        })
 
 def all_sentence_quiz(request):
     if request.method == 'POST':
@@ -76,44 +172,4 @@ def all_sentence_quiz(request):
 
         return render(request, 'app_video/select_quiz.html', {
                 "json_quiz": json_quiz
-        })
-
-def all_word_quiz(request):
-    if request.method == 'POST':
-        words=''
-        # 문장이 없는 경우
-        count = Word.objects.count()
-        if (count == 0):
-            print('단어 없음~~')
-            return render(request, 'app_video/select_quiz.html', {
-            })
-        elif (count <= 10):
-            print('<=10')
-            word_list = Word.objects.values_list('word_eg', flat=False)
-            words = " / ".join(word_list)
-            print(words)
-        elif (count > 10):
-            print('>10')
-            random_word_list = Word.objects.order_by(Random()).values_list('word_eg', flat=True)[:10]
-            words = " / ".join(random_word_list)
-            print(words)
-
-        # ChatGPT 모델 호출 및 응답 받기
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": f'words : {words}'+request_content_word}
-            ],
-            max_tokens=2000,
-            temperature=0.8,
-            # response_format 지정하기
-            response_format={"type": "json_object"}
-        )
-
-        response_text = response.choices[0].message.content
-        print(response_text)
-        json_quiz = json.loads(response_text)
-
-        return render(request, 'app_video/select_quiz.html', {
-            "json_quiz": json_quiz
         })
