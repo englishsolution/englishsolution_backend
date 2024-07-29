@@ -9,5 +9,10 @@
         {% csrf_token %}
         <button type="submit">all_sentence_quiz</button>
     </form>
+
+    <form action="{% url 'all_word_quiz' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">all_word_quiz</button>
+    </form>
 </body>
 </html>

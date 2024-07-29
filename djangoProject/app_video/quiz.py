@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import os
 
-from app_video.models import Video, Sentence
+from app_video.models import Video, Sentence, Word
 from django.db.models.functions import Random
 
 load_dotenv(verbose=True) #env 파일에서 api_key를 가져옴 # 배포시 verbose 지우기
@@ -14,12 +14,33 @@ API_KEY=os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=API_KEY)
 
+request_content_word = (f"Purpose: Choose the correct korean of a word. "
+                   f"example:"
+                   f"{{"
+                   f"  \"questions\": ["
+                   f"    {{"
+                   f"      \"word\": \"word_english\","
+                   f"      \"options\": ["
+                   f"        \"A. word_korean1\","
+                   f"        \"B. word_korean2\","
+                   f"        \"C. word_korean3\","
+                   f"        \"D. word_korean4\""
+                   f"      ],"
+                   f"      \"answer\": \"word_korean2\""
+                   f"    }},"
+                   f"Answer each word with JSON in the form of an example. Make the total number of words")
+
+request_content_sentence = (f"Purpose: Fill in the blanks. "
+                   f"You're a great blank-making problem maker. For each sentence, you create a problem by specifying an important word or vocabulary as a blank and changing it to '__'."
+                   f"Answer with JSON in the form of \'Question\', \'answer\'")
+
 def select_quiz(request):
     videos = Video.objects.all()
     return render(request, 'app_video/select_quiz.html', {"videos": videos})
 
 def all_sentence_quiz(request):
     if request.method == 'POST':
+        sentences=''
         #문장이 없는 경우
         count=Sentence.objects.count()
         if(count==0):
@@ -37,15 +58,11 @@ def all_sentence_quiz(request):
             sentences = " / ".join(random_sentence_list)
             print(sentences)
 
-        request_content = (f"Five sentences: {sentences}.Purpose: Fill in the blanks. "
-                           f"You're a great blank-making problem maker. For each sentence, you create a problem by specifying an important word or vocabulary as a blank and changing it to '__'."
-                            f"Answer with JSON in the form of \'Question\', \'answer\'")
-
         # ChatGPT 모델 호출 및 응답 받기
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": request_content}
+                {"role": "system", "content": f'sentences: {sentences}'+ request_content_sentence}
             ],
             max_tokens=1000,
             temperature=0.8,
@@ -54,8 +71,49 @@ def all_sentence_quiz(request):
         )
 
         response_text = response.choices[0].message.content
+        print(response_text)
         json_quiz = json.loads(response_text)
 
         return render(request, 'app_video/select_quiz.html', {
-                {"json_quiz": json_quiz}
+                "json_quiz": json_quiz
+        })
+
+def all_word_quiz(request):
+    if request.method == 'POST':
+        words=''
+        # 문장이 없는 경우
+        count = Word.objects.count()
+        if (count == 0):
+            print('단어 없음~~')
+            return render(request, 'app_video/select_quiz.html', {
+            })
+        elif (count <= 10):
+            print('<=10')
+            word_list = Word.objects.values_list('word_eg', flat=False)
+            words = " / ".join(word_list)
+            print(words)
+        elif (count > 10):
+            print('>10')
+            random_word_list = Word.objects.order_by(Random()).values_list('word_eg', flat=True)[:10]
+            words = " / ".join(random_word_list)
+            print(words)
+
+        # ChatGPT 모델 호출 및 응답 받기
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": f'words : {words}'+request_content_word}
+            ],
+            max_tokens=2000,
+            temperature=0.8,
+            # response_format 지정하기
+            response_format={"type": "json_object"}
+        )
+
+        response_text = response.choices[0].message.content
+        print(response_text)
+        json_quiz = json.loads(response_text)
+
+        return render(request, 'app_video/select_quiz.html', {
+            "json_quiz": json_quiz
         })
