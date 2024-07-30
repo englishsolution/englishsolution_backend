@@ -180,3 +180,45 @@ def all_word_quiz(request):
         return render(request, 'app_video/select_quiz.html', {
             "json_quiz": json_quiz
         })
+
+def replay_sentence_quiz(request):
+    if request.method == 'POST':
+        video_id=1
+        sentences=''
+        #문장이 없는 경우
+        count=SentenceQuiz.objects.filter(is_wrong=1, video_id = video_id).count()
+        if(count==0):
+            print('문장 없음~~')
+            return render(request, 'app_video/select_quiz.html', {
+            })
+        elif (count<=10):
+            print('<=10')
+            json_quiz=SentenceQuiz.objects.filter(video_id=1, is_wrong=1).values_list('quiz', flat=True)
+        elif (count>10):
+            print('>10')
+            json_quiz = SentenceQuiz.objects.filter(video_id=1, is_wrong=1).order_by('?')[:10].values_list('quiz', flat=True)
+
+        return render(request, 'app_video/select_quiz.html', {
+                "json_quiz": json_quiz
+        })
+
+def replay_word_quiz(request):
+    if request.method == 'POST':
+        video_id=1
+        words=''
+        # 문장이 없는 경우
+        count = WordQuiz.objects.filter(is_wrong=1, video_id = video_id).count()
+        if (count == 0):
+            print('단어 없음~~')
+            return render(request, 'app_video/select_quiz.html', {
+            })
+        elif (count <= 10):
+            print('<=10')
+            json_quiz = WordQuiz.objects.filter(video_id=1, is_wrong=1).values_list('quiz', flat=True)
+        elif (count > 10):
+            print('>10')
+            json_quiz = WordQuiz.objects.filter(video_id=1, is_wrong=1).order_by('?')[:10].values_list('quiz',flat=True)
+
+        return render(request, 'app_video/select_quiz.html', {
+            "json_quiz": json_quiz
+        })

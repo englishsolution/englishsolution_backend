@@ -28,4 +28,6 @@ urlpatterns = [
     path('select_quiz/', quiz.select_quiz, name='select_quiz'),
     path('all_sentence_quiz/', quiz.all_sentence_quiz, name='all_sentence_quiz'),
     path('all_word_quiz/', quiz.all_word_quiz, name='all_word_quiz'),
+    path('replay_word_quiz/', quiz.replay_word_quiz, name='replay_word_quiz'),
+    path('replay_sentence_quiz/', quiz.replay_sentence_quiz, name='replay_sentence_quiz'),
 ]
