@@ -141,7 +141,7 @@ class SentenceQuiz(models.Model):
     sentence_quiz_id = models.AutoField(primary_key=True)
     quiz = models.JSONField(blank=True, null=True)
     is_wrong = models.IntegerField(blank=True, null=True)
-    quiz_0 = models.ForeignKey(Quiz, models.DO_NOTHING, db_column='quiz_id', blank=True, null=True)  # Field renamed because of name conflict.
+    quiz_id = models.ForeignKey(Quiz, models.DO_NOTHING, db_column='quiz_id', blank=True, null=True)  # Field renamed because of name conflict.
 
     class Meta:
         managed = False
@@ -200,7 +200,7 @@ class WordQuiz(models.Model):
     word_quiz_id = models.AutoField(primary_key=True)
     quiz = models.JSONField(blank=True, null=True)
     is_wrong = models.IntegerField(blank=True, null=True)
-    quiz_0 = models.ForeignKey(Quiz, models.DO_NOTHING, db_column='quiz_id', blank=True, null=True)  # Field renamed because of name conflict.
+    quiz_id = models.ForeignKey(Quiz, models.DO_NOTHING, db_column='quiz_id', blank=True, null=True)  # Field renamed because of name conflict.
 
     class Meta:
         managed = False
