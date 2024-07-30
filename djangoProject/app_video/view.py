@@ -9,16 +9,23 @@ from .views.sentence_analysis import sentence_analysis
 @csrf_exempt
 def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
     if request.method == "POST":
-        prompt = str(request.POST.get("prompt"))
         mode= str(request.POST.get("mode"))
+        prompt = str(request.POST.get("prompt"))
+        check=0
         if mode == "general": #일반 chatbot
             response = general_chatbot(prompt)
+            check=1
+            print(response)
         #elif mode=="conversation": # 영상의 주제를 가지고 대화하는 챗봇
          #   response = conversation_chatbot(prompt)
         elif mode == "word":  # 랜덤 단어를 제공해주는 챗봇
             difficulty = str(request.POST.get("difficulty"))
             response = word_chatbot(difficulty)
-        return JsonResponse({'reply': response},status=200)
+            check=1
+            print(response)
+
+        if check==1:
+            return JsonResponse({'reply': response},status=200)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
