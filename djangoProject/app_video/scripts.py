@@ -1,10 +1,7 @@
 import json
-from datetime import datetime
-
-import openai
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from pytube import YouTube
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Test
 from .models import Video
@@ -33,10 +30,12 @@ def test(request):
 def insert_url(request):
     return render(request, 'app_video/insert_url.html')
 
+@csrf_exempt
 def processing_url(request):
+    data = json.loads(request.body.decode('utf-8'))
     print("url_link_start")
     if request.method == 'POST':
-        url = request.POST['url']
+        url = data.get("url")
         print(url)
         if is_youtube_url(url) : #youtube 영상여부 체크
             video_id = get_youtube_video_id(url)
@@ -51,12 +50,9 @@ def processing_url(request):
                     print('영어 자막 있음')#영어 자막 있는 경우
                     transcription_en = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
                     print(transcription_en)
-                    script = ' '.join([content['text'] for content in transcription_en])
-                    print(script)
                 else :
                     print('영어 자막 없음')#영어 자막 없는 경우
                     # YouTube에서 오디오 스트림 다운로드
-                    yt = YouTube(url)
                     audio_file_path = download_audio_yt_dlp(url)
 
                     # 오디오 파일 열기
@@ -68,8 +64,6 @@ def processing_url(request):
                         file=audio_file,
                         response_format="verbose_json"  # 형식 start, end(srt는 00분 00초부터 00분 07초까지)
                     )
-
-                    script = response.text
                     transcription_en=[]
                     for content in response.segments :
                         text = content['text']
@@ -79,7 +73,9 @@ def processing_url(request):
                         transcription_en.append({'text': text, 'start': start, 'duration': duration})
                     print(transcription_en)
 
-
+                script = ' '.join([content['text'] for content in transcription_en])
+                script = seperate_caption(script)
+                print(script)
 
                 #한글자막 확인
                 if has_korean:#한글 자막 있는 경우
@@ -94,10 +90,10 @@ def processing_url(request):
                     response = client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "user", "content": f'{transcription_en} Translate only the values corresponding to \'text\' into Korean ah its getting so laid"'},
+                            {"role": "system", "content": f'{transcription_en} Translate only the values corresponding to \'text\' into Korean.'},
                         ],
                         temperature=0.7,
-                        max_tokens= 4096
+                        max_tokens= 4096,
                     )
                     # 응답에서 번역된 문장 추출
                     print('응답에서 번역된 문장 추출')
@@ -129,18 +125,17 @@ def processing_url(request):
                     user_id='user1',
                     link=url,
                     title=response_text,
-                    save_date=datetime.now(),
                     view_count=1,
                     img=thumbnail,
                     script=script
                 )
                 new_video_record.save()
 
-                return render(request, 'app_video/res.html', {
-                    'url':url,
-                    'title': response_text,
-                    'thumbnail': thumbnail,
-                })
+                return JsonResponse({'url': url,
+                                     'title': response_text,
+                                    'thumbnail': thumbnail,
+                                     'transcription_ko':transcription_ko,
+                                     'transcription_en': transcription_en})
     return render(request, 'app_video/insert_url.html')
 
 def is_youtube_url(url):
@@ -182,3 +177,21 @@ def download_audio_yt_dlp(youtube_url, output_path='audio.mp3'):
     except Exception as e:
         print(f"예기치 않은 오류 발생: {e}")
         return None
+
+def seperate_caption(script) :
+    #문장으로 분리하기
+    request_content = (f"Here is the video script: {script}. You're a sentence separator. "
+                       f"You divide the sentence-unseparated script into '.' and return it in String form.")
+
+    # ChatGPT 모델 호출 및 응답 받기
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": request_content}
+        ],
+        max_tokens=1000,
+        temperature=0.7
+    )
+    response_text = response.choices[0].message.content
+    # 생성된 응답 출력
+    return response_text
