@@ -15,19 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from app_video import views, speaking, scripts, quiz
+from django.urls import path,include
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('test/', scripts.test, name='test'),
-    path('insert_url/', scripts.insert_url, name='insert_url'),
-    path('processing_url/', scripts.processing_url, name='processing_url'),
-    path('speaking/', speaking.speaking, name='speaking'),
-    path('processing_speaking/', speaking.processing_speaking, name='processing_speaking'),
-    path('select_quiz/', quiz.select_quiz, name='select_quiz'),
-    path('all_sentence_quiz/', quiz.all_sentence_quiz, name='all_sentence_quiz'),
-    path('all_word_quiz/', quiz.all_word_quiz, name='all_word_quiz'),
-    path('replay_word_quiz/', quiz.replay_word_quiz, name='replay_word_quiz'),
-    path('replay_sentence_quiz/', quiz.replay_sentence_quiz, name='replay_sentence_quiz'),
+    path('', include("app_video.urls")),
+
 ]
