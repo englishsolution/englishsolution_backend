@@ -39,6 +39,10 @@ environ.Env.read_env(
     env_file=os.path.join(BASE_DIR, '.env')
 )
 
+#user database 설정
+AUTH_USER_MODEL = 'auth.User'  # 기본 사용자 모델을 사용
+
+
 # Application definition
 
 INSTALLED_APPS = [
