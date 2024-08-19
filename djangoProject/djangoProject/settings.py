@@ -42,6 +42,11 @@ environ.Env.read_env(
 #user database 설정
 AUTH_USER_MODEL = 'auth.User'  # 기본 사용자 모델을 사용
 
+# TIME_ZONE 설정
+TIME_ZONE = 'Asia/Seoul'
+
+# 시간대를 사용하도록 활성화
+USE_TZ = True  # UTC 사용을 위한 옵션
 
 # Application definition
 
@@ -129,11 +134,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+# USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
