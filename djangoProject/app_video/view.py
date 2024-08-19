@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .form import SentenceForm,WordForm
 from .views.general_chatbot import general_chatbot
 from .views.word_chatbot import word_chatbot
+from .views.conversation_chatbot import conversation_chatbot
 from .views.sentence_analysis import sentence_analysis
 import json
 from django.shortcuts import render
@@ -30,10 +31,11 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
                 difficulty = data.get("difficulty")
                 response = word_chatbot(difficulty)
                 check = 1
-            # elif mode =="conversation": # 영상 주제를 가지고 영어로 대화하는 챗봇
-            #     prompt = data.get("prompt")
-            #     response = conversation_chatbot(prompt)
-            #     check=1
+            elif mode =="topic": # 영상 주제를 가지고 영어로 대화하는 챗봇
+                prompt = data.get("prompt")
+                video_title = data.get("video_title")
+                response = conversation_chatbot(prompt,video_title)
+                check=1
             else:
                 raise ValueError(f"Invalid mode: {mode}")
 
