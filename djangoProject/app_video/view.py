@@ -54,7 +54,8 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
 @csrf_exempt
 def request_to_sentence(request): # 문장 분석을 하는 함수
     if request.method == "POST":
-        sentence = str(request.POST.get("sentence"))
+        data = json.loads(request.body.decode('utf-8'))
+        sentence = data.get("setence")
         response = sentence_analysis(sentence)
     return JsonResponse({'reply': response})
 
