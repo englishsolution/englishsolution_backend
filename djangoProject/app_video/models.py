@@ -196,6 +196,7 @@ class Word(models.Model):
     word_kr = models.CharField(max_length=500)
     save_date = models.DateTimeField(auto_now_add=True)
     video = models.ForeignKey(Video, models.CASCADE)
+    type=models.CharField(max_length=500)
 
     class Meta:
         db_table = 'word'

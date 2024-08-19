@@ -32,6 +32,5 @@ def sentence_analysis(sentence):
     # 응답에서 결과 추출
     result = response.choices[0].message.content
 
-    print(result)
     return result
 
