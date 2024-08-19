@@ -38,10 +38,9 @@ class AuthPermission(models.Model):
         unique_together = (('content_type', 'codename'),)
 
 
-class AuthUser(models.Model):  # USER 관리 모델
-    user_id = models.BigAutoField(primary_key=True)
+class Auth_User(models.Model):  # USER 관리 모델
     password = models.CharField(max_length=128, null=False)
-    last_login = models.DateTimeField()
+    last_login = models.DateTimeField(auto_now=True)
     is_superuser = models.IntegerField()
     username = models.CharField(unique=True, max_length=30)
     first_name = models.CharField(max_length=30)
@@ -49,17 +48,16 @@ class AuthUser(models.Model):  # USER 관리 모델
     email = models.CharField(max_length=75)
     is_staff = models.IntegerField() #True이면 관리자 사이트 접근 가능
     is_active = models.IntegerField() #계정 활성화
-    date_joined = models.DateTimeField()
+    date_joined = models.DateTimeField(auto_now_add=True)
     state = models.IntegerField() # 관리자(모든 권한)
 
     class Meta:
-        managed = False
-        db_table = 'auth_user'
+        db_table = 'auth__user'
 
 
 class AuthUserGroups(models.Model):
     id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    user = models.ForeignKey(Auth_User, models.DO_NOTHING)
     group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
 
     class Meta:
@@ -70,7 +68,7 @@ class AuthUserGroups(models.Model):
 
 class AuthUserUserPermissions(models.Model):
     id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    user = models.ForeignKey(Auth_User, models.DO_NOTHING)
     permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
 
     class Meta:
@@ -86,7 +84,7 @@ class DjangoAdminLog(models.Model):
     action_flag = models.PositiveSmallIntegerField()
     change_message = models.TextField()
     content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    user = models.ForeignKey(Auth_User, models.DO_NOTHING)
 
     class Meta:
         managed = False
@@ -142,7 +140,7 @@ class Video(models.Model):
     save_date = models.DateTimeField(auto_now_add=True) #저장날짜
     view_count = models.IntegerField() #시청횟수
     img = models.TextField() #영상 썸네일
-    user = models.ForeignKey(AuthUser, on_delete= models.CASCADE, to_field='user_id')
+    user = models.ForeignKey(Auth_User, on_delete= models.CASCADE, to_field='username')
     script = models.TextField(default='default_script')
 
     class Meta:
@@ -162,7 +160,7 @@ class Quiz(models.Model):
     quiz_id = models.AutoField(primary_key=True)
     quiz_date = models.DateTimeField(auto_now_add=True)
     answer_per = models.DecimalField(max_digits=5, decimal_places=2)
-    user = models.ForeignKey(AuthUser, models.CASCADE, to_field='user_id')
+    user = models.ForeignKey(Auth_User, on_delete=models.CASCADE, to_field='username')
     video = models.ForeignKey(Video, models.CASCADE)
 
     class Meta:
