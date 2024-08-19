@@ -7,81 +7,191 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-class Quiz(models.Model):
-    quiz_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('Users', models.DO_NOTHING, to_field='user_id', blank=True, null=True)
-    video = models.ForeignKey('Video', models.DO_NOTHING, blank=True, null=True)
-    quiz_date = models.DateTimeField(blank=True, null=True)
-    answer_per = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+
+class AuthGroup(models.Model):
+    name = models.CharField(unique=True, max_length=80)
 
     class Meta:
-        db_table = 'quiz'
+        managed = False
+        db_table = 'auth_group'
 
 
-
-class Sentence(models.Model):
-    sentence_id = models.AutoField(primary_key=True)
-    video = models.ForeignKey('Video', models.DO_NOTHING, blank=True, null=True)
-    sentence_eg = models.CharField(max_length=500, blank=True, null=True)
-    sentence_kr = models.CharField(max_length=500, blank=True, null=True)
-    save_date = models.DateTimeField(blank=True, null=True)
+class AuthGroupPermissions(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+    permission = models.ForeignKey('AuthPermission', models.DO_NOTHING)
 
     class Meta:
-        db_table = 'sentence'
-
-class SentenceQuiz(models.Model):
-    sentence_quiz_id = models.AutoField(primary_key=True)
-    quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.
-    is_wrong = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'sentence_quiz'
+        managed = False
+        db_table = 'auth_group_permissions'
+        unique_together = (('group', 'permission'),)
 
 
-class Test(models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=50, blank=True, null=True)
+class AuthPermission(models.Model):
+    name = models.CharField(max_length=50)
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING)
+    codename = models.CharField(max_length=100)
 
     class Meta:
-        db_table = 'test'
+        managed = False
+        db_table = 'auth_permission'
+        unique_together = (('content_type', 'codename'),)
 
-class Users(models.Model):
-    user_id = models.CharField(unique=True, max_length=50, blank=True, null=True)
-    email = models.CharField(max_length=50, blank=True, null=True)
-    passwd = models.CharField(max_length=50, blank=True, null=True)
-    state = models.IntegerField(blank=True, null=True)
+
+class AuthUser(models.Model):  # USER 관리 모델
+    user_id = models.BigAutoField(primary_key=True)
+    password = models.CharField(max_length=128, null=False)
+    last_login = models.DateTimeField()
+    is_superuser = models.IntegerField()
+    username = models.CharField(unique=True, max_length=30)
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    email = models.CharField(max_length=75)
+    is_staff = models.IntegerField() #True이면 관리자 사이트 접근 가능
+    is_active = models.IntegerField() #계정 활성화
+    date_joined = models.DateTimeField()
+    state = models.IntegerField() # 관리자(모든 권한)
 
     class Meta:
-        db_table = 'users'
+        managed = False
+        db_table = 'auth_user'
+
+
+class AuthUserGroups(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_groups'
+        unique_together = (('user', 'group'),)
+
+
+class AuthUserUserPermissions(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_user_permissions'
+        unique_together = (('user', 'permission'),)
+
+
+class DjangoAdminLog(models.Model):
+    action_time = models.DateTimeField()
+    object_id = models.TextField(blank=True, null=True)
+    object_repr = models.CharField(max_length=200)
+    action_flag = models.PositiveSmallIntegerField()
+    change_message = models.TextField()
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'django_admin_log'
+
+
+class DjangoContentType(models.Model):
+    name = models.CharField(max_length=100)
+    app_label = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'django_content_type'
+        unique_together = (('app_label', 'model'),)
+
+
+class DjangoMigrations(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
+class DjangoSession(models.Model):
+    session_key = models.CharField(primary_key=True, max_length=40)
+    session_data = models.TextField()
+    expire_date = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_session'
+
+# 장고의 auth user로 대체
+# class Users(models.Model):  #user
+#     id = models.BigAutoField(primary_key=True)  #고유 아이디 index
+#     user_id = models.CharField(unique=True, max_length=50)
+#     email = models.CharField(max_length=50)
+#     passwd = models.CharField(max_length=50)
+#     #state = models.IntegerField()
+#
+#     class Meta:
+#         db_table = 'users'
 
 class Video(models.Model):
     video_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(Users, models.DO_NOTHING, to_field='user_id', blank=True, null=True)
-    link = models.CharField(max_length=500, blank=True, null=True)
-    title = models.CharField(max_length=50, blank=True, null=True)
-    save_date = models.DateTimeField(blank=True, null=True)
-    view_count = models.IntegerField(blank=True, null=True)
-    img = models.TextField(blank=True, null=True)
+    link = models.CharField(max_length=500) #영상링크
+    title = models.CharField(max_length=50) #영상제목
+    save_date = models.DateTimeField(auto_now_add=True) #저장날짜
+    view_count = models.IntegerField() #시청횟수
+    img = models.TextField() #영상 썸네일
+    user = models.ForeignKey(AuthUser, on_delete= models.CASCADE, to_field='user_id')
+    script = models.TextField(default='default_script')
 
     class Meta:
         db_table = 'video'
 
+class Sentence(models.Model):
+    sentence_id = models.AutoField(primary_key=True)
+    sentence_eg = models.CharField(max_length=500)
+    sentence_kr = models.CharField(max_length=500)
+    save_date = models.DateTimeField(auto_now_add=True)
+    video = models.ForeignKey(Video,on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'sentence'
+
+class Quiz(models.Model):
+    quiz_id = models.AutoField(primary_key=True)
+    quiz_date = models.DateTimeField(auto_now_add=True)
+    answer_per = models.DecimalField(max_digits=5, decimal_places=2)
+    user = models.ForeignKey(AuthUser, models.CASCADE, to_field='user_id')
+    video = models.ForeignKey(Video, models.CASCADE)
+
+    class Meta:
+        db_table = 'quiz'
+
+class SentenceQuiz(models.Model):
+    sentence_quiz_id = models.AutoField(primary_key=True)
+    quiz = models.JSONField()  # { "Qustion" : "Answer" }
+    is_wrong = models.IntegerField() # 0 : 맞음 , 1 : 틀림
+    quiz_0 = models.ForeignKey(Quiz, models.CASCADE, db_column='quiz_id') # Field renamed because of name conflict.
+
+    class Meta:
+        db_table = 'sentence_quiz'
+
 class Word(models.Model):
     word_id = models.AutoField(primary_key=True)
-    video = models.ForeignKey(Video, models.DO_NOTHING, blank=True, null=True)
-    word_eg = models.CharField(max_length=500, blank=True, null=True)
-    word_kr = models.CharField(max_length=500, blank=True, null=True)
-    save_date = models.DateTimeField(blank=True, null=True)
+    word_eg = models.CharField(max_length=500)
+    word_kr = models.CharField(max_length=500)
+    save_date = models.DateTimeField(auto_now_add=True)
+    video = models.ForeignKey(Video, models.CASCADE)
 
     class Meta:
         db_table = 'word'
 
 class WordQuiz(models.Model):
     word_quiz_id = models.AutoField(primary_key=True)
-    quiz = models.ForeignKey(Quiz, models.DO_NOTHING, blank=True, null=True)
-    quiz_0 = models.JSONField(db_column='quiz', blank=True, null=True)  # Field renamed because of name conflict.
-    is_wrong = models.IntegerField(blank=True, null=True)
+    quiz = models.JSONField() # { "Qustion" : "Answer" }
+    is_wrong = models.IntegerField() # 0 : 맞음 , 1 : 틀림
+    quiz_0 = models.ForeignKey(Quiz, models.CASCADE, db_column='quiz_id')  # Field renamed because of name conflict.
 
-    class Meta:
+    class Meta:# Field renamed because of name conflict.
         db_table = 'word_quiz'
