@@ -6,6 +6,12 @@ from .views.general_chatbot import general_chatbot
 from .views.word_chatbot import word_chatbot
 from .views.sentence_analysis import sentence_analysis
 import json
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def dashboard(request):
+    return render(request, 'app_video/dashboard.html')
 
 @csrf_exempt
 def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
@@ -13,18 +19,21 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
         try:
             data = json.loads(request.body.decode('utf-8'))
             mode = data.get("mode")
-            prompt = data.get("prompt")
+
             check = 0
 
             if mode == "general":  # 일반 chatbot
+                prompt = data.get("prompt")
                 response = general_chatbot(prompt)
                 check = 1
-                print(response)
             elif mode == "word":  # 랜덤 단어를 제공해주는 챗봇
                 difficulty = data.get("difficulty")
                 response = word_chatbot(difficulty)
                 check = 1
-                print(response)
+            # elif mode =="conversation": # 영상 주제를 가지고 영어로 대화하는 챗봇
+            #     prompt = data.get("prompt")
+            #     response = conversation_chatbot(prompt)
+            #     check=1
             else:
                 raise ValueError(f"Invalid mode: {mode}")
 
