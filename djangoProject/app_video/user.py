@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
@@ -29,6 +30,7 @@ def signup(request):
                 return JsonResponse({'error': 'No valid response generated'}, status=400)
             user = User.objects.create_user(username=username, first_name=first_name, last_name = last_name, email=email, password=password1)
             user.is_active = False  # 계정을 비활성화 상태로 생성
+
             user.save()
 
             current_site = get_current_site(request)
@@ -65,6 +67,7 @@ def activate(request, uidb64, token):
             return HttpResponse('계정이 이미 활성화되었습니다.')
         else:
             user.is_active = True
+            user.state = 0
             user.save()
             return HttpResponse('이메일 인증 완료되었습니다.')
     else:
@@ -84,3 +87,51 @@ def check_id(request):
         }
         return JsonResponse(result)
     JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def login(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if request.method == 'POST':
+        username =  data.get('username')
+        request.session['username'] = username
+        return JsonResponse({'username': username})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def logout(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if request.method == 'POST':
+        username = data.get('username')
+        try:
+            print('삭제 후')
+            request.session.modified = True  # 세션 삭제 가능하도록 등록
+            del request.session['username']  # 세션 삭제
+            return JsonResponse({'username': username})
+        except:
+            pass
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def delete(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if request.method == 'POST':
+        username = data.get('username')
+        password = data.get('password')
+        try:
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                # request.session.modified = True  # 세션 삭제 가능하도록 등록
+                # del request.session['username']  # 세션 삭제
+                # 탈퇴 처리
+                user.state = 1
+                user.save()
+                return JsonResponse({'message': '탈퇴 완료'})
+            else:
+                # 인증에 실패하면 에러 메시지 표시
+                return JsonResponse({'error': 'password not match'}, status=500)
+        except:
+            pass
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+

@@ -18,5 +18,8 @@ urlpatterns = [
     path('signup/', user.signup, name='signup'),
     path('activate/<uidb64>/<token>/', user.activate, name='activate'),
     path('check_id/', user.check_id, name='check_id'),
+    path('logout/', user.logout, name='logout'),
+    path('login/', user.login, name='login'),
+    path('delete/', user.delete, name='delete'),
 
 ]
