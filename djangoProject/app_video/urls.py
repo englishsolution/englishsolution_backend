@@ -1,8 +1,10 @@
 from django.urls import path,include
-from . import view,login
+# from app_video import view, speaking, scripts, quiz, tests, user
+
+from . import view,login, speaking, scripts, quiz, tests, user
 from rest_framework.routers import DefaultRouter
 from .view import SentenceViewSet,WordViewSet
-from app_video import view, speaking, scripts, quiz, tests, user
+
 
 router = DefaultRouter()
 router.register(r'sentences', SentenceViewSet)
@@ -16,7 +18,6 @@ urlpatterns = [
     path('save',view.save, name='save'),
     path('login', login.login_view, name='login'),
     path('realtime/', include(router.urls)),
-]
 
     path('processing_url/', scripts.processing_url, name='processing_url'),
     path('speaking/', speaking.speaking, name='speaking'),
@@ -32,3 +33,6 @@ urlpatterns = [
     path('logout/', user.logout, name='logout'),
     path('login/', user.login, name='login'),
     path('delete/', user.delete, name='delete'),
+]
+
+
