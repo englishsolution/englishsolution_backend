@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Button Form</title>
+</head>
+<body>
+    <form action="{% url 'all_sentence_quiz' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">all_sentence_quiz</button>
+    </form>
+
+    <form action="{% url 'all_word_quiz' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">all_word_quiz</button>
+    </form>
+</body>
+</html>
