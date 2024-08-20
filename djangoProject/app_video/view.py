@@ -36,24 +36,29 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
         try:
             data = json.loads(request.body.decode('utf-8'))
             mode = data.get("mode")
-
+            print("mode:",mode)  #서버 확인용
             check = 0
 
             if mode == "general":  # 일반 chatbot
                 prompt = data.get("prompt")
+                print("prompt:",prompt) #서버 확인용
                 response = general_chatbot(prompt)
                 check = 1
             elif mode == "word":  # 랜덤 단어를 제공해주는 챗봇
                 difficulty = data.get("difficulty")
+                print("difficulty:",difficulty) #서버 확인용
                 response = word_chatbot(difficulty)
                 check = 1
             elif mode =="topic": # 영상 주제를 가지고 영어로 대화하는 챗봇
                 prompt = data.get("prompt")
+                print("prompt:",prompt) #서버 확인용
                 video_title = data.get("video_title")
                 response = conversation_chatbot(prompt,video_title)
                 check=1
             else:
                 raise ValueError(f"Invalid mode: {mode}")
+
+            print("response:",response) #서버 확인용
 
             if check == 1:
                 return JsonResponse({'reply': response}, status=200)
@@ -72,7 +77,9 @@ def request_to_sentence(request): # 문장 분석을 하는 함수
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
         sentence = data.get("setence")
+        print("sentence:",sentence) #서버 확인용
         response = sentence_analysis(sentence)
+        print("response:",response) #서버 확인용
     return JsonResponse({'reply': response})
 
 @csrf_exempt
@@ -80,11 +87,13 @@ def save(request): # 사용자가 저장한 것을 데이터베이스에 연결�
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         category = data.get("category") #word or sentence
+        print("category:",category) #서버 확인용
 
         if category == "word" :
            word=data.get("word")
            find_video_link=data.get("video_link")
            word_eg,word_kr,type=word_translate(word)
+           print("word_eg:",word_eg,"word_kr:",word_kr,"type:",type) #서버 확인용
 
            # Video 인스턴스 가져오기
            try:
