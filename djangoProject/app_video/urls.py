@@ -13,6 +13,7 @@ router.register(r'words',WordViewSet)
 
 
 urlpatterns = [
+    path('testserver',view.testserver),
     path('chatbot', view.request_to_chatbot, name='chatbot'),
     path('sentence', view.request_to_sentence, name='sentence'),
     path('save',view.save, name='save'),
