@@ -33,7 +33,7 @@ request_content_word = (f"Purpose: Choose the correct korean of a word. "
                    f"      \"answer\": \"word_korean2\""
                    f"    }},"
                    f"}},"
-                   f"Answer each word with JSON in the form of an example. Make the total number of words")
+                   f"Answer each word with JSON in the form of an example. The number of words and the number of questions should be the same")
 
 request_content_sentence = (f"Purpose: Fill in the blanks. "
                         f"example:\n"
@@ -54,6 +54,17 @@ request_content_sentence = (f"Purpose: Fill in the blanks. "
                         f" Return JSON in the same format as in the example")
 
 @csrf_exempt
+def quiz_index(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if request.method == 'POST':
+        user_id=data.get("user_id")
+        titles = Video.objects.filter(user_id=user_id).values_list('title', flat=True)
+        titles= list(titles)
+        return JsonResponse({'titles': titles})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@csrf_exempt
 def all_sentence_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
@@ -65,11 +76,9 @@ def all_sentence_quiz(request):
         if(count==0):
             return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count<=10):
-            print('<=10')
             sentence_list=Sentence.objects.filter(video_id=video_id).values_list('sentence_eg', flat=False)
             sentences = " / ".join([sentence[0] for sentence in sentence_list])
         elif (count>10):
-            print('>10')
             random_sentence_list = Sentence.objects.filter(video_id=video_id).order_by(Random()).values_list('sentence_eg', flat=True)[:10]
             sentences = " / ".join(random_sentence_list)
 
@@ -86,14 +95,13 @@ def all_sentence_quiz(request):
         )
 
         response_text = response.choices[0].message.content
-        print(response_text)
         json_quiz = json.loads(response_text)
 
         #마지막 quiz_id
         last_quiz_id = Quiz.objects.order_by('-video_id').values_list('video_id', flat=True).first()
         if(last_quiz_id==None):
             last_quiz_id=0
-        # quiz, sentence_quiz 테이블에 저장
+        #quiz, sentence_quiz 테이블에 저장
         new_quiz = Quiz(
             quiz_date=timezone.now(),
             answer_per=0,
@@ -101,17 +109,18 @@ def all_sentence_quiz(request):
             video_id=video_id,
         )
         new_quiz.save()
+
         #인스턴스 가져오기
         quiz_instance = Quiz.objects.get(quiz_id=last_quiz_id+1)
-
-        for question in json_quiz:
+        questions = json_quiz.get("questions", [])
+        # 각 질문 데이터 그대로 가져오기
+        for question in questions:
             sentence_quiz = SentenceQuiz(
-                quiz=json.dumps(question),
+                quiz=question,
                 is_wrong=1,
-                quiz_id=quiz_instance
+                quiz_0=quiz_instance
             )
             sentence_quiz.save()
-
         return JsonResponse({'json_quiz': json_quiz})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
@@ -127,11 +136,9 @@ def all_word_quiz(request):
         if (count == 0):
             return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count <= 10):
-            print('<=10')
             word_list = Word.objects.filter(video_id=video_id).values_list('word_eg', flat=False)
             words = " / ".join(word[0] for word in word_list)
         elif (count > 10):
-            print('>10')
             random_word_list = Word.objects.filter(video_id=video_id).order_by(Random()).values_list('word_eg', flat=True)[:10]
             words = " / ".join(random_word_list)
 
@@ -139,7 +146,7 @@ def all_word_quiz(request):
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f'words : {words}'+request_content_word}
+                {"role": "system", "content": f'words : {words} \n'+request_content_word}
             ],
             max_tokens=2000,
             temperature=0.8,
@@ -164,57 +171,48 @@ def all_word_quiz(request):
         new_quiz.save()
         # 인스턴스 가져오기
         quiz_instance = Quiz.objects.get(quiz_id=last_quiz_id + 1)
-
-        for quiz_data in json_quiz.values():
+        questions = json_quiz.get("questions", [])
+        # 각 질문 데이터 그대로 가져오기
+        for question in questions:
             word_quiz = WordQuiz(
-                quiz_id=quiz_instance,
-                quiz=quiz_data,
-                is_wrong=1
+                quiz=question,
+                is_wrong=1,
+                quiz_0=quiz_instance
             )
             word_quiz.save()
-
-        return JsonResponse({'quiz_data': quiz_data})
+        return JsonResponse({'json_quiz': json_quiz})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
-def replay_sentence_quiz(request):
+def replay_quiz(request):
+    data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
-        video_id=1
-        sentences=''
-        #문장이 없는 경우
-        count=SentenceQuiz.objects.filter(is_wrong=1, video_id = video_id).count()
-        if(count==0):
-            print('문장 없음~~')
-            return render(request, 'app_video/select_quiz.html', {
-            })
-        elif (count<=10):
-            print('<=10')
-            json_quiz=SentenceQuiz.objects.filter(video_id=1, is_wrong=1).values_list('quiz', flat=True)
-        elif (count>10):
-            print('>10')
-            json_quiz = SentenceQuiz.objects.filter(video_id=1, is_wrong=1).order_by('?')[:10].values_list('quiz', flat=True)
+        user_id = data.get("user_id")
+        video_id = data.get("video_id")
 
-        return render(request, 'app_video/select_quiz.html', {
-                "json_quiz": json_quiz
-        })
+        quiz_ids = Quiz.objects.filter(user=user_id, video=video_id).values_list('quiz_id', flat=True)
+        sentence_quiz = SentenceQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz')
+        word_quiz = WordQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz')
 
-def replay_word_quiz(request):
-    if request.method == 'POST':
-        video_id=1
-        words=''
-        # 문장이 없는 경우
-        count = WordQuiz.objects.filter(is_wrong=1, video_id = video_id).count()
-        if (count == 0):
-            print('단어 없음~~')
-            return render(request, 'app_video/select_quiz.html', {
-            })
-        elif (count <= 10):
-            print('<=10')
-            json_quiz = WordQuiz.objects.filter(video_id=1, is_wrong=1).values_list('quiz', flat=True)
-        elif (count > 10):
-            print('>10')
-            json_quiz = WordQuiz.objects.filter(video_id=1, is_wrong=1).order_by('?')[:10].values_list('quiz',flat=True)
+        sentence_count = sentence_quiz.count()
+        word_count = word_quiz.count()
+ 
+        if(sentence_count==0 & word_count == 0 ):
+            return JsonResponse({'error': '틀린 문장과 단어가 없음'}, status=400)
+        
+        if (sentence_count>5) :
+            print('>5')
+            sentence_quiz=sentence_quiz.order_by('?')[:5].values_list('quiz', flat=True)
+            
+        if (word_count > 5):
+            print('>5')
+            word_quiz = word_quiz.order_by('?')[:5].values_list('quiz', flat=True)
 
-        return render(request, 'app_video/select_quiz.html', {
-            "json_quiz": json_quiz
-        })
+        json_sentence_quiz = list(sentence_quiz)
+        json_word_quiz = list(word_quiz)
+
+        return JsonResponse({
+            'word_quiz': json_word_quiz,
+            'sentence_quiz': json_sentence_quiz
+        }, status=200)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
