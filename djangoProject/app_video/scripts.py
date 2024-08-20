@@ -87,7 +87,7 @@ def processing_url(request):
                     # 응답에서 번역된 문장 추출
                     transcription_ko = response.choices[0].message.content
 
-                if not Video.objects.filter(user_id=user_id, video_identitfy=video_id).exists():
+                if not Video.objects.filter(user_id=user_id, video_identify=video_id).exists():
                     #title 정하기
                     request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video."
 
@@ -112,16 +112,17 @@ def processing_url(request):
                         img=thumbnail,
                         script=script,
                         user_id=user_id,
-                        video_identitfy= video_id
+                        video_identify= video_id
                     ).save()
 
                 else :
-                    title = Video.objects.filter(user_id=user_id, video_identitfy=video_id).values_list('title', flat=True).first()
-                    thumbnail = Video.objects.filter(user_id=user_id, video_identitfy=video_id).values_list('img', flat=True).first()
+                    title = Video.objects.filter(user_id=user_id, video_identify=video_id).values_list('title', flat=True).first()
+                    thumbnail = Video.objects.filter(user_id=user_id, video_identify=video_id).values_list('img', flat=True).first()
 
                 return JsonResponse({'url': url,
                                         'title': title,
                                         'thumbnail': thumbnail,
+                                        'script' : script,
                                         'transcription_ko':transcription_ko,
                                         'transcription_en': transcription_en})
     return render(request, 'app_video/insert_url.html')
