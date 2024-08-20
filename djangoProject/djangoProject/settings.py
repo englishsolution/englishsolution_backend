@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +25,8 @@ SECRET_KEY = 'django-insecure-#^ihsqlb50ejbjwq=)@r!+o9x8*hp&ac===e5hs6iuhq$byb5_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['15.165.135.23','127.0.0.1'] # 탄력적 주소만 허용 #if not perform, change '*'
+
 
 # .env 파일 설정
 import environ
@@ -40,6 +39,15 @@ environ.Env.read_env(
     env_file=os.path.join(BASE_DIR, '.env')
 )
 
+#user database 설정
+AUTH_USER_MODEL = 'auth.User'  # 기본 사용자 모델을 사용
+
+# TIME_ZONE 설정
+TIME_ZONE = 'Asia/Seoul'
+
+# 시간대를 사용하도록 활성화
+USE_TZ = True  # UTC 사용을 위한 옵션
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,7 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app_video',
-    'six',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +69,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True #모든 도메인에서의 요청 허용
 
 ROOT_URLCONF = 'djangoProject.urls'
 
@@ -119,16 +130,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/
-# s/i18n/
+# https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+# USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -140,18 +150,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# settings.py
-load_dotenv(verbose=True) #env 파일에서 api_key를 가져옴 # 배포시 verbose 지우기
-
-API_KEY=os.getenv("EMAIL_HOST_PASSWORD")
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'gad122838@gmail.com'
-EMAIL_HOST_PASSWORD = 'aqfz cnkl dhtl pmwg'
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-# ACCOUNT_EMAIL_SUBJECT_PREFIX = '[이메일 인증]' #이메일 제목앞에 붙일내용

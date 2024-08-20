@@ -1,9 +1,24 @@
+from django.urls import path,include
+# from app_video import view, speaking, scripts, quiz, tests, user
 
-from django.contrib import admin
-from django.urls import path
-from app_video import view, speaking, scripts, quiz, tests, user
+from . import view,login, speaking, scripts, quiz, tests, user
+from rest_framework.routers import DefaultRouter
+from .view import SentenceViewSet,WordViewSet
+
+
+router = DefaultRouter()
+router.register(r'sentences', SentenceViewSet)
+router.register(r'words',WordViewSet)
+
+
 
 urlpatterns = [
+    path('chatbot', view.request_to_chatbot, name='chatbot'),
+    path('sentence', view.request_to_sentence, name='sentence'),
+    path('save',view.save, name='save'),
+    path('login', login.login_view, name='login'),
+    path('realtime/', include(router.urls)),
+
     path('processing_url/', scripts.processing_url, name='processing_url'),
     path('speaking/', speaking.speaking, name='speaking'),
     path('processing_speaking/', speaking.processing_speaking, name='processing_speaking'),
@@ -18,5 +33,6 @@ urlpatterns = [
     path('logout/', user.logout, name='logout'),
     path('login/', user.login, name='login'),
     path('delete/', user.delete, name='delete'),
-
 ]
+
+

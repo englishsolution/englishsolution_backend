@@ -13,6 +13,8 @@ media
 
 # personal enviroment -> .idea 안올리기 위함
 .idea
+#가상환경 결과 제외하기 위함
+*.exe
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.
@@ -135,7 +137,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+djangoProject/.env
 .venv
 env/
 venv/
