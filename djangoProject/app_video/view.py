@@ -27,6 +27,10 @@ def dashboard(request):
     return render(request, 'app_video/dashboard.html')
 
 @csrf_exempt
+def testserver(request):
+    return HttpResponse("server is running!")
+
+@csrf_exempt
 def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
     if request.method == "POST":
         try:
