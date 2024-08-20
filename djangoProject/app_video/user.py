@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib import auth
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import EmailMessage
@@ -18,7 +19,7 @@ def signup(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
         username = data.get('username')
-        first_name = data.get('firstname')
+        first_name = data.get('first_name')
         last_name = data.get('last_name')
         email = data.get('email')
         password1 = data.get('password1')
@@ -28,7 +29,7 @@ def signup(request):
             if User.objects.filter(email=email).exists():
                 print('이메일 존재함')
                 return JsonResponse({'error': 'No valid response generated'}, status=400)
-            user = User.objects.create_user(username=username, first_name=first_name, last_name = last_name, email=email, password=password1)
+            user = User.objects.create_user(password=password1, is_superuser=0, username=username, first_name=first_name, last_name=last_name, email=email,is_staff=0, date_joined=timezone.now())
             user.is_active = False  # 계정을 비활성화 상태로 생성
 
             user.save()

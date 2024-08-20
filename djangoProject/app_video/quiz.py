@@ -1,7 +1,10 @@
 import json
 from datetime import datetime
 
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
@@ -50,30 +53,25 @@ request_content_sentence = (f"Purpose: Fill in the blanks. "
                         f"For each sentence, fill in a blank space with an important word or vocabulary and change it to \'_\'."
                         f" Return JSON in the same format as in the example")
 
-def select_quiz(request):
-    videos = Video.objects.all()
-    return render(request, 'app_video/select_quiz.html', {"videos": videos})
-
+@csrf_exempt
 def all_sentence_quiz(request):
+    data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
-        video_id=1
+        user_id=data.get("user_id")
+        video_id=data.get("video_id")
         sentences=''
         #문장이 없는 경우
         count=Sentence.objects.count()
         if(count==0):
-            print('문장 없음~~')
-            return render(request, 'app_video/select_quiz.html', {
-            })
+            return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count<=10):
             print('<=10')
             sentence_list=Sentence.objects.filter(video_id=video_id).values_list('sentence_eg', flat=False)
-            sentences= " / ".join(sentence_list)
-            print(sentences)
+            sentences = " / ".join([sentence[0] for sentence in sentence_list])
         elif (count>10):
             print('>10')
             random_sentence_list = Sentence.objects.filter(video_id=video_id).order_by(Random()).values_list('sentence_eg', flat=True)[:10]
             sentences = " / ".join(random_sentence_list)
-            print(sentences)
 
         # ChatGPT 모델 호출 및 응답 받기
         response = client.chat.completions.create(
@@ -97,47 +95,45 @@ def all_sentence_quiz(request):
             last_quiz_id=0
         # quiz, sentence_quiz 테이블에 저장
         new_quiz = Quiz(
-            user_id='user1',
+            quiz_date=timezone.now(),
+            answer_per=0,
+            user_id=user_id,
             video_id=video_id,
-            quiz_date=datetime.now(),
         )
         new_quiz.save()
         #인스턴스 가져오기
         quiz_instance = Quiz.objects.get(quiz_id=last_quiz_id+1)
 
-        for quiz_data in json_quiz.values():
+        for question in json_quiz:
             sentence_quiz = SentenceQuiz(
-                quiz_id=quiz_instance,
-                quiz=quiz_data,
-                is_wrong=1
+                quiz=json.dumps(question),
+                is_wrong=1,
+                quiz_id=quiz_instance
             )
             sentence_quiz.save()
 
+        return JsonResponse({'json_quiz': json_quiz})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-        return render(request, 'app_video/select_quiz.html', {
-                "json_quiz": json_quiz
-        })
-
+@csrf_exempt
 def all_word_quiz(request):
+    data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
-        video_id=1
+        user_id = data.get("user_id")
+        video_id = data.get("video_id")
         words=''
         # 문장이 없는 경우
         count = Word.objects.count()
         if (count == 0):
-            print('단어 없음~~')
-            return render(request, 'app_video/select_quiz.html', {
-            })
+            return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count <= 10):
             print('<=10')
             word_list = Word.objects.filter(video_id=video_id).values_list('word_eg', flat=False)
-            words = " / ".join(word_list)
-            print(words)
+            words = " / ".join(word[0] for word in word_list)
         elif (count > 10):
             print('>10')
             random_word_list = Word.objects.filter(video_id=video_id).order_by(Random()).values_list('word_eg', flat=True)[:10]
             words = " / ".join(random_word_list)
-            print(words)
 
         # ChatGPT 모델 호출 및 응답 받기
         response = client.chat.completions.create(
@@ -152,7 +148,6 @@ def all_word_quiz(request):
         )
 
         response_text = response.choices[0].message.content
-        print(response_text)
         json_quiz = json.loads(response_text)
 
         # 마지막 quiz_id
@@ -161,9 +156,10 @@ def all_word_quiz(request):
             last_quiz_id = 0
         # quiz, sentence_quiz 테이블에 저장
         new_quiz = Quiz(
-            user_id='user1',
+            quiz_date=timezone.now(),
+            answer_per=0,
+            user_id=user_id,
             video_id=video_id,
-            quiz_date=datetime.now(),
         )
         new_quiz.save()
         # 인스턴스 가져오기
@@ -177,10 +173,10 @@ def all_word_quiz(request):
             )
             word_quiz.save()
 
-        return render(request, 'app_video/select_quiz.html', {
-            "json_quiz": json_quiz
-        })
+        return JsonResponse({'quiz_data': quiz_data})
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+@csrf_exempt
 def replay_sentence_quiz(request):
     if request.method == 'POST':
         video_id=1
