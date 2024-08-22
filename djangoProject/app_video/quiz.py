@@ -25,10 +25,10 @@ request_content_word = (f"Purpose: Choose the correct korean of a word. "
                    f"    {{"
                    f"      \"word\": \"word_english\","
                    f"      \"options\": ["
-                   f"        \"A. word_korean1\","
-                   f"        \"B. word_korean2\","
-                   f"        \"C. word_korean3\","
-                   f"        \"D. word_korean4\""
+                   f"        \"word_korean1\","
+                   f"        \"word_korean2\","
+                   f"        \"word_korean3\","
+                   f"        \"word_korean4\""
                    f"      ],"
                    f"      \"answer\": \"word_korean2\""
                    f"    }},"
@@ -113,6 +113,7 @@ def all_sentence_quiz(request):
         #인스턴스 가져오기
         quiz_instance = Quiz.objects.get(quiz_id=last_quiz_id+1)
         questions = json_quiz.get("questions", [])
+        quiz_id_list =[]
         # 각 질문 데이터 그대로 가져오기
         for question in questions:
             sentence_quiz = SentenceQuiz(
@@ -121,7 +122,10 @@ def all_sentence_quiz(request):
                 quiz_0=quiz_instance
             )
             sentence_quiz.save()
-        return JsonResponse({'json_quiz': json_quiz})
+            latest_quiz_id = SentenceQuiz.objects.latest('sentence_quiz_id').sentence_quiz_id
+            quiz_id_list.append(latest_quiz_id)
+        return JsonResponse({'json_quiz': json_quiz,
+                             'quiz_id_list': quiz_id_list})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
@@ -172,6 +176,7 @@ def all_word_quiz(request):
         # 인스턴스 가져오기
         quiz_instance = Quiz.objects.get(quiz_id=last_quiz_id + 1)
         questions = json_quiz.get("questions", [])
+        quiz_id_list = []
         # 각 질문 데이터 그대로 가져오기
         for question in questions:
             word_quiz = WordQuiz(
@@ -180,7 +185,10 @@ def all_word_quiz(request):
                 quiz_0=quiz_instance
             )
             word_quiz.save()
-        return JsonResponse({'json_quiz': json_quiz})
+            latest_quiz_id = WordQuiz.objects.latest('word_quiz_id').word_quiz_id
+            quiz_id_list.append(latest_quiz_id)
+        return JsonResponse({'json_quiz': json_quiz,
+                             'quiz_id_list': quiz_id_list})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
@@ -191,8 +199,8 @@ def replay_quiz(request):
         video_id = data.get("video_id")
 
         quiz_ids = Quiz.objects.filter(user=user_id, video=video_id).values_list('quiz_id', flat=True)
-        sentence_quiz = SentenceQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz')
-        word_quiz = WordQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz')
+        sentence_quiz = SentenceQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz','sentence_quiz_id')
+        word_quiz = WordQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz','word_quiz_id')
 
         sentence_count = sentence_quiz.count()
         word_count = word_quiz.count()
@@ -202,11 +210,11 @@ def replay_quiz(request):
         
         if (sentence_count>5) :
             print('>5')
-            sentence_quiz=sentence_quiz.order_by('?')[:5].values_list('quiz', flat=True)
+            sentence_quiz=sentence_quiz.order_by('?')[:5].values_list('quiz','sentence_quiz_id')
             
         if (word_count > 5):
             print('>5')
-            word_quiz = word_quiz.order_by('?')[:5].values_list('quiz', flat=True)
+            word_quiz = word_quiz.order_by('?')[:5].values_list('quiz','word_quiz_id')
 
         json_sentence_quiz = list(sentence_quiz)
         json_word_quiz = list(word_quiz)
