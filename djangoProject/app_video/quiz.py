@@ -224,3 +224,22 @@ def replay_quiz(request):
             'sentence_quiz': json_sentence_quiz
         }, status=200)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def quiz_result(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if request.method == 'POST':
+        try :
+            sentence_id_list=data.get("sentence_id_list")
+            word_id_list=data.get("word_id_list")
+
+            WordQuiz.objects.filter(word_quiz_id__in=word_id_list).update(is_wrong=0)
+            SentenceQuiz.objects.filter(sentence_quiz_id__in=sentence_id_list).update(is_wrong=0)
+            return JsonResponse({
+                'sentence_id_list': sentence_id_list,
+                'word_id_list': word_id_list
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
