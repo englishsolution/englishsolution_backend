@@ -76,7 +76,7 @@ def sentence_translate(sentence):
 
     # 응답에서 결과 추출
     result = response.choices[0].message.content
-    print('dddddddddddd',result)
+    print('sentence_translate.py: ',result)
 
     # JSON 문자열을 파이썬 딕셔너리로 변환
     result_dict = json.loads(result)

@@ -3,16 +3,16 @@ from django.urls import path,include
 
 from . import view,login, speaking, scripts, quiz, tests, user
 from rest_framework.routers import DefaultRouter
-from .view import SentenceViewSet,WordViewSet
-
+from .view import SentenceViewSet, WordViewSet, VideoViewSet
 
 router = DefaultRouter()
 router.register(r'sentences', SentenceViewSet)
 router.register(r'words',WordViewSet)
+router.register(r'videos',VideoViewSet)
 
 from django.contrib import admin
 from django.urls import path
-from app_video import view, speaking, scripts, quiz, tests, user
+# from app_video import view, speaking, scripts, quiz, tests, user
 
 urlpatterns = [
     path('testserver',view.testserver),

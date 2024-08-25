@@ -11,7 +11,7 @@ import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .models import Word,Sentence,Video
-from .serializers import SentenceSerializer,WordSerializer
+from .serializers import SentenceSerializer,WordSerializer ,VideoSerializer
 from rest_framework import viewsets
 
 class SentenceViewSet(viewsets.ModelViewSet):
@@ -21,6 +21,10 @@ class SentenceViewSet(viewsets.ModelViewSet):
 class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
+
+class VideoViewSet(viewsets.ModelViewSet):
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
 
 @login_required
 def dashboard(request):

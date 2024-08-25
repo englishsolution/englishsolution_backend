@@ -147,7 +147,7 @@ class Video(models.Model):
         on_delete=models.CASCADE
     )
     script = models.TextField(default='default_script')
-    video_identitfy = models.CharField(unique=True, max_length=45)
+    video_identify = models.CharField(unique=True, max_length=45) #비디오 고유 id
     class Meta:
         db_table = 'video'
 
