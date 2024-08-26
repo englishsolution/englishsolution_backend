@@ -80,7 +80,7 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
 def request_to_sentence(request): # 문장 분석을 하는 함수
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
-        sentence = data.get("setence")
+        sentence = data.get("sentence")
         print("sentence:",sentence) #서버 확인용
         response = sentence_analysis(sentence)
         print("response:",response) #서버 확인용
