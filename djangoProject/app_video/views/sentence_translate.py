@@ -78,12 +78,16 @@ def sentence_translate(sentence):
     result = response.choices[0].message.content
     print('sentence_translate.py: ',result)
 
-    # JSON 문자열을 파이썬 딕셔너리로 변환
-    result_dict = json.loads(result)
+    # JSON 변환 시 발생할 수 있는 예외 처리
+    try:
+        # JSON 문자열을 파이썬 딕셔너리로 변환
+        result_dict = json.loads(result)
+    except json.JSONDecodeError:
+        raise ValueError(f"Failed to decode JSON from response: {result}")
 
-    korean=result_dict.get('translate')
+    korean = result_dict.get('translate')
 
-    if not result:  #result가 빈 문자열인 경우
+    if not korean:  # result가 빈 문자열인 경우
         raise ValueError("Received empty response from translation API")
 
     return korean
