@@ -37,5 +37,6 @@ urlpatterns = [
     path('delete/', user.delete, name='delete'),
 
     path('quiz_index/', quiz.quiz_index, name='quiz_index'),
+    path('quiz_result/', quiz.quiz_result, name='quiz_result'),
 
 ]

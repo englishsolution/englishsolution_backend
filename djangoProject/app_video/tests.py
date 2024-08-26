@@ -20,4 +20,3 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
         except ValueError as ve:
             # 예외: 잘못된 입력값
             return JsonResponse({'error': str(ve)}, status=400)
-
