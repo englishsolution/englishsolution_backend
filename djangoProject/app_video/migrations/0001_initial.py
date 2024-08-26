@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                 ('view_count', models.IntegerField()),
                 ('img', models.TextField()),
                 ('script', models.TextField(default='default_script')),
-                ('video_identitfy', models.CharField(max_length=45, unique=True)),
+                ('video_identify', models.CharField(max_length=45, unique=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
