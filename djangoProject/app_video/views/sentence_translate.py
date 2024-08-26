@@ -81,6 +81,9 @@ def sentence_translate(sentence):
     # JSON 문자열을 파이썬 딕셔너리로 변환
     result_dict = json.loads(result)
 
-    korean=result_dict.get('translate',[])
+    korean=result_dict.get('translate')
+
+    if not result:  #result가 빈 문자열인 경우
+        raise ValueError("Received empty response from translation API")
 
     return korean
