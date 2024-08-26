@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
+from django.contrib.auth.decorators import login_required
 
 from app_video.models import Video, Sentence, Word, Quiz, SentenceQuiz, WordQuiz
 from django.db.models.functions import Random
@@ -54,6 +55,7 @@ request_content_sentence = (f"Purpose: Fill in the blanks. "
                         f" Return JSON in the same format as in the example")
 
 @csrf_exempt
+@login_required
 def quiz_index(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
@@ -65,6 +67,7 @@ def quiz_index(request):
 
 
 @csrf_exempt
+@login_required()
 def all_sentence_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
@@ -129,6 +132,7 @@ def all_sentence_quiz(request):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
+@login_required()
 def all_word_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
@@ -192,6 +196,7 @@ def all_word_quiz(request):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
+@login_required()
 def replay_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':

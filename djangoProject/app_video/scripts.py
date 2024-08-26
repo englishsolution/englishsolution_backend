@@ -17,6 +17,8 @@ import re
 
 import yt_dlp as youtube_dl
 
+from django.contrib.auth.decorators import login_required
+
 # Create your views here.
 
 load_dotenv(verbose=True) #env 파일에서 api_key를 가져옴 # 배포시 verbose 지우기
@@ -26,6 +28,7 @@ API_KEY=os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=API_KEY)
 
 @csrf_exempt
+@login_required
 def processing_url(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':

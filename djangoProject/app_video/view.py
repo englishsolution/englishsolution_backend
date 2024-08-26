@@ -35,6 +35,7 @@ def testserver(request):
     return HttpResponse("server is running!")
 
 @csrf_exempt
+@login_required
 def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
     if request.method == "POST":
         try:
@@ -77,6 +78,7 @@ def request_to_chatbot(request):  # chatbot 요청을 처리하는 함수
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
+@login_required
 def request_to_sentence(request): # 문장 분석을 하는 함수
     if request.method == "POST":
         data = json.loads(request.body.decode('utf-8'))
@@ -87,6 +89,7 @@ def request_to_sentence(request): # 문장 분석을 하는 함수
     return JsonResponse({'reply': response})
 
 @csrf_exempt
+@login_required
 def save(request): # 사용자가 저장한 것을 데이터베이스에 연결하는 함수
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
