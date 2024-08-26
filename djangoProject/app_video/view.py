@@ -26,6 +26,10 @@ class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        return Video.objects.filter(user=user)
+
 @login_required
 def dashboard(request):
     return render(request, 'app_video/dashboard.html')
