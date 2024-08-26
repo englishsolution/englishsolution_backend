@@ -88,6 +88,12 @@ def processing_url(request):
                     )
                     # 응답에서 번역된 문장 추출
                     transcription_ko = response.choices[0].message.content
+                    print(transcription_ko)
+                    transcription_ko = json.loads('"'+transcription_ko+'"')
+
+                    json_string = transcription_ko.replace("'", '"')
+
+                    transcription_ko = json.loads(json_string)
 
                 if not Video.objects.filter(user_id=user_id, video_identify=video_id).exists():
                     #title 정하기
