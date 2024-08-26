@@ -33,9 +33,7 @@ def processing_url(request):
         user_id = data.get("user_id")
         if is_youtube_url(url) : #youtube 영상여부 체크
             video_id = get_youtube_video_id(url)
-            print(video_id)
             if video_id != None : #video_id 추출
-                print(1)
                 # 자막 여부 체크
                 transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
                 has_english = any(transcript.language_code == 'en' for transcript in transcript_list)
@@ -66,9 +64,11 @@ def processing_url(request):
                         transcription_en.append({'text': text, 'start': start, 'duration': duration})
 
                 script = ' '.join([content['text'] for content in transcription_en])
-                script = seperate_caption(script)
+                script = separate_caption(script)
 
-                #한글자막 확인
+                #sentence_level_trans(transcription_en, script)
+
+                # #한글자막 확인
                 if has_korean:#한글 자막 있는 경우
                     print('한글 자막 있음')
                     transcription_ko = YouTubeTranscriptApi.get_transcript(video_id, languages=['ko'])
@@ -109,6 +109,7 @@ def processing_url(request):
                         link=url,
                         title=title,
                         save_date=timezone.now(),
+                        view_count=1,
                         img=thumbnail,
                         script=script,
                         user_id=user_id,
@@ -167,16 +168,16 @@ def download_audio_yt_dlp(youtube_url, output_path='audio.mp3'):
         print(f"예기치 않은 오류 발생: {e}")
         return None
 
-def seperate_caption(script) :
+def separate_caption(script) :
     #문장으로 분리하기
-    request_content = (f"Here is the video script: {script}. You're a sentence separator. "
-                       f"You divide the sentence-unseparated script into '.' and return it in String form.")
+    request_content = (f"I have a script that isn't properly separated into individual sentences. Could you please help me split the text into distinct sentences? Here is the script: {script}"
+                       f"Please make sure to clearly separate each sentence by period and include punctuation marks or capital letters. If there is a special phrase or non-standard punctuation mark (such as 'music' or 'applause', please keep it as it is and treat it as a separate object.")
 
     # ChatGPT 모델 호출 및 응답 받기
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": request_content}
+            {"role": "user", "content": request_content}
         ],
         max_tokens=1000,
         temperature=0.7
