@@ -27,6 +27,8 @@ API_KEY=os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=API_KEY)
 
+reply_ex= ("[ {	\"text\" : sentence1, \"id_list\": [1,2,3] },{	\"text\" : sentence2, \"id_list\": [3,4] },	{	\"text\" : sentence3, \"id_list\": [5]	} ]")
+
 @csrf_exempt
 def processing_url(request):
     data = json.loads(request.body.decode('utf-8'))
@@ -65,10 +67,11 @@ def processing_url(request):
                         duration = end - start
                         transcription_en.append({'text': text, 'start': start, 'duration': duration})
 
+                for i in range(len(transcription_en)) :
+                    transcription_en[i]['id']=i
+
                 script = ' '.join([content['text'] for content in transcription_en])
                 script = separate_caption(script)
-
-                #sentence_level_trans(transcription_en, script)
 
                 # #한글자막 확인
                 if has_korean:#한글 자막 있는 경우
@@ -96,6 +99,7 @@ def processing_url(request):
                     transcription_ko = json.loads(json_string)
 
                 if not Video.objects.filter(user_id=user_id, video_identify=video_id).exists():
+
                     #title 정하기
                     request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video."
 
@@ -179,7 +183,7 @@ def download_audio_yt_dlp(youtube_url, output_path='audio.mp3'):
 def separate_caption(script) :
     #문장으로 분리하기
     request_content = (f"I have a script that isn't properly separated into individual sentences. Could you please help me split the text into distinct sentences? Here is the script: {script}"
-                       f"Please make sure to clearly separate each sentence by period and include punctuation marks or capital letters. If there is a special phrase or non-standard punctuation mark (such as 'music' or 'applause', please keep it as it is and treat it as a separate object.")
+                       f"Please make sure to clearly separate each sentence by period and include punctuation marks or capital letters. Do not use quotation marks. Do not use newline characters. Treat special phrases or non-standard punctuation marks such as [Music] or [Applause] as separate sentences and separate them with a period.")
 
     # ChatGPT 모델 호출 및 응답 받기
     response = client.chat.completions.create(
