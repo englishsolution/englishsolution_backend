@@ -28,7 +28,6 @@ API_KEY=os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=API_KEY)
 
 @csrf_exempt
-@login_required
 def processing_url(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
