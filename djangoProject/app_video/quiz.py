@@ -35,24 +35,28 @@ request_content_word = (f"Purpose: Choose the correct korean of a word. "
                    f"    }},"
                    f"}},"
                    f"Answer each word with JSON in the form of an example. The number of words and the number of questions should be the same")
+request_content_sentence = (
+    f"Purpose: Create a fill-in-the-blank question with spaces marked underlined (_) in the sentences in the sentences. "
+    f"Example format:\n"
+    f"{{"
+    f"  \"questions\": ["
+    f"    {{"
+    f"      \"sentence\": \"But I told you to get each one of them an ice cream, why did you buy all that bread honey? Cut me some slack _ ya.\","
+    f"      \"options\": ["
+    f"        \"will\","
+    f"        \"should\","
+    f"        \"would\","
+    f"        \"can\""
+    f"      ],"
+    f"      \"answer\": \"can\""
+    f"    }}"
+    f"  ]"
+    f"}}\n"
+    f"Ensure that each sentence you generate has exactly one blank space represented by an underscore (_). "
+    f"The blank should be placed where a key word is missing. "
+    f"Return the result as JSON in the format shown in the example."
+)
 
-request_content_sentence = (f"Purpose: Fill in the blanks. "
-                        f"example:\n"
-                        f"{{"
-                        f"  \"questions\": ["
-                        f"    {{"
-                        f"      \"sentence\": \"But I told you to get each one of them an ice cream why did you buy all that bread honey cut me some slack _ ya.\","
-                        f"      \"options\": ["
-                        f"        \"will\","
-                        f"        \"should\","
-                        f"        \"would\","
-                        f"        \"can\""
-                        f"      ],"
-                        f"      \"answer\": \"can\""
-                        f"    }},"
-                        f"}}"
-                        f"For each sentence, fill in a blank space with an important word or vocabulary and change it to \'_\'."
-                        f" Return JSON in the same format as in the example")
 
 @csrf_exempt
 def quiz_index(request):
@@ -87,7 +91,7 @@ def all_sentence_quiz(request):
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f'sentences: {sentences}'+ request_content_sentence}
+                {"role": "user", "content": f'sentences: {sentences}'+ request_content_sentence}
             ],
             max_tokens=1000,
             temperature=0.8,
