@@ -76,6 +76,7 @@ def processing_url(request):
                         duration = end - start
                         transcription_en.append({'text': text, 'start': start, 'duration': duration})
 
+                print(transcription_en)
                 script = ' '.join([content['text'] for content in transcription_en])
                 script = separate_caption(script)
 
@@ -83,7 +84,6 @@ def processing_url(request):
                 if has_korean:#한글 자막 있는 경우
                     print('한글 자막 있음')
                     transcription_ko = YouTubeTranscriptApi.get_transcript(video_id, languages=['ko'])
-                    script = ' '.join([content['text'] for content in transcription_ko])
                 else :#한글 자막 없는 경우
                     print('한글 자막 없음')
                     #joined_text만 따로 번역
@@ -98,9 +98,11 @@ def processing_url(request):
                         temperature=0.7,
                         max_tokens= 4096,
                     )
+
                     # 응답에서 번역된 문장 추출
                     try :
                         transcription_ko = response.choices[0].message.content
+                        print(transcription_ko)
                         transcription_ko = json.loads(transcription_ko)
                     except :
                         transcription_ko = '에러'
