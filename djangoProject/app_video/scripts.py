@@ -41,7 +41,12 @@ def processing_url(request):
             video_id = get_youtube_video_id(url)
             if video_id != None : #video_id 추출
                 # 자막 여부 체크
-                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+                try:
+                    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                except json.JSONDecodeError as e:
+                    return JsonResponse({'error': '자막 없음'}, status=400)
+
                 has_english = any(transcript.language_code == 'en' for transcript in transcript_list)
                 has_korean = any(transcript.language_code == 'ko' for transcript in transcript_list)
 
@@ -195,7 +200,7 @@ def separate_caption(script) :
             {"role": "user", "content": request_content}
         ],
         max_tokens=1000,
-        temperature=0.7
+        temperature=0.6
     )
     response_text = response.choices[0].message.content
     # 생성된 응답 출력
