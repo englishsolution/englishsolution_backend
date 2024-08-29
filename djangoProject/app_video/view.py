@@ -117,11 +117,14 @@ def save(request): # 사용자가 저장한 것을 데이터베이스에 연결�
         elif category == 'sentence':
             sentence = data.get("sentence")
             find_video_link = data.get("video_link")
+            print('find_video_link',find_video_link)  ## 로그 확인용
             korean=sentence_translate(sentence)
+            print("korean:",korean)  ## 로그 확인용
 
             # Video 인스턴스 가져오기
             try:
                 video_link = Video.objects.get(link=find_video_link)
+                print("video_link:",video_link) ##로그 확인용
             except Video.DoesNotExist:
                 return JsonResponse({'error': 'Invalid video ID'}, status=400)
 

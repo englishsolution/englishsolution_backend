@@ -9,8 +9,16 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=API_KEY)
 
 message_history=[]
+last_video_title=''
 
 def conversation_chatbot(request,video_title): #단어 chatbot
+
+    global last_video_title
+    global message_history
+
+    if last_video_title!=video_title:
+        message_history=[]
+        last_video_title=video_title
 
     video = get_object_or_404(Video, title=video_title)
     video_script = video.script
