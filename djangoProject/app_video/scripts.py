@@ -45,6 +45,7 @@ def processing_url(request):
                 try:
                     transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
                 except json.JSONDecodeError as e:
+                    print("자막 없음88888888888")
                     return JsonResponse({'error': '자막 없음'}, status=400)
 
                 has_english = any(transcript.language_code == 'en' for transcript in transcript_list)
@@ -108,7 +109,7 @@ def processing_url(request):
                 if not Video.objects.filter(user_id=user_id, video_identify=video_id).exists():
 
                     #title 정하기
-                    request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video."
+                    request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video. Do not use quotation marks"
 
                     # ChatGPT 모델 호출 및 응답 받기
                     response = client.chat.completions.create(
