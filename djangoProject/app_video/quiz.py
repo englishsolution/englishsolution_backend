@@ -208,7 +208,9 @@ def replay_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
         user_id = data.get("user_id")
-        video_id = data.get("video_id")
+        video_identify = data.get("video_identify")
+
+        video_id = Video.objects.filter(video_identify=video_identify).values_list('video_id', flat=True).first()
 
         quiz_ids = Quiz.objects.filter(user=user_id, video=video_id).values_list('quiz_id', flat=True)
         sentence_quiz = SentenceQuiz.objects.filter(quiz_0__in=quiz_ids, is_wrong=1).values('quiz','sentence_quiz_id')
