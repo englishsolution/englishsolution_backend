@@ -44,35 +44,18 @@ def processing_url(request):
 
                 try:
                     transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                    transcription_en = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
-
-                    has_korean = any(transcript.language_code == 'ko' for transcript in transcript_list)
-                    if( has_korean ):
-                        transcription_ko = YouTubeTranscriptApi.get_transcript(video_id, languages=['ko'])
-                    else :
-                        print('한글 자막 없음')
-                        # joined_text만 따로 번역
-                        response = client.chat.completions.create(
-                            model="gpt-3.5-turbo",
-                            messages=[
-                                {
-                                    "role": "system", "content": "You are a translation assistant."
-                                },
-                                {"role": "user",
-                                 "content": f'{transcription_en} Please translate the \'text\' fields in the following JSON from English to Korean. Keep the \'start\' and \'duration\' fields unchanged. Return the result as a JSON object.'},
-                            ],
-                            temperature=0.7,
-                            max_tokens=4096,
-                        )
-                        # 응답에서 번역된 문장 추출
-                        try:
-                            transcription_ko = response.choices[0].message.content
-                            transcription_ko = json.loads(transcription_ko)
-                        except:
-                            transcription_ko = 'error'
-
                 except TranscriptsDisabled:
-                    print('영어 자막 없음')  # 영어 자막 없는 경우
+                    print("자막 없음88888888888")
+                    return JsonResponse({'error': '자막 없음'}, status=400)
+
+                has_english = any(transcript.language_code == 'en' for transcript in transcript_list)
+                has_korean = any(transcript.language_code == 'ko' for transcript in transcript_list)
+
+                if has_english :
+                    print('영어 자막 있음')#영어 자막 있는 경우
+                    transcription_en = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+                else :
+                    print('영어 자막 없음')#영어 자막 없는 경우
                     # YouTube에서 오디오 스트림 다운로드
                     audio_file_path = download_audio_yt_dlp(url, video_id)
                     # 오디오 파일 열기
@@ -84,57 +67,49 @@ def processing_url(request):
                         file=audio_file,
                         response_format="verbose_json"  # 형식 start, end(srt는 00분 00초부터 00분 07초까지)
                     )
-                    transcription_en = []
+                    transcription_en=[]
 
-                    for content in response.segments:
+                    for content in response.segments :
                         text = content['text']
                         start = content['start']
                         end = content['end']
                         duration = end - start
                         transcription_en.append({'text': text, 'start': start, 'duration': duration})
 
-                    response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {
-                                "role": "system", "content": "You are a translation assistant."
-                            },
-                            {"role": "user",
-                             "content": f'{transcription_en} Please translate the \'text\' fields in the following JSON from English to Korean. Keep the \'start\' and \'duration\' fields unchanged. Return the result as a JSON object.'},
-                        ],
-                        temperature=0.7,
-                        max_tokens=4096,
-                    )
-                    # 응답에서 번역된 문장 추출
-
-                    print('한글 자막 없음')
-                    # joined_text만 따로 번역
-                    response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {
-                                "role": "system", "content": "You are a translation assistant."
-                            },
-                            {"role": "user",
-                             "content": f'{transcription_en} Please translate the \'text\' fields in the following JSON from English to Korean. Keep the \'start\' and \'duration\' fields unchanged. Return the result as a JSON object.'},
-                        ],
-                        temperature=0.7,
-                        max_tokens=4096,
-                    )
-                    # 응답에서 번역된 문장 추출
-                    try:
-                        transcription_ko = response.choices[0].message.content
-                        transcription_ko = json.loads(transcription_ko)
-                    except:
-                        transcription_ko = 'error'
-
                 script = ' '.join([content['text'] for content in transcription_en])
                 script = separate_caption(script)
+
+                # #한글자막 확인
+                if has_korean:#한글 자막 있는 경우
+                    print('한글 자막 있음')
+                    transcription_ko = YouTubeTranscriptApi.get_transcript(video_id, languages=['ko'])
+                    script = ' '.join([content['text'] for content in transcription_ko])
+                else :#한글 자막 없는 경우
+                    print('한글 자막 없음')
+                    #joined_text만 따로 번역
+                    response = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {
+                             "role": "system", "content": "You are a translation assistant."
+                            },
+                            {"role": "user", "content": f'{transcription_en} Please translate the \'text\' fields in the following JSON from English to Korean. Keep the \'start\' and \'duration\' fields unchanged. Return the result as a JSON object.'},
+                        ],
+                        temperature=0.7,
+                        max_tokens= 4096,
+                    )
+                    # 응답에서 번역된 문장 추출
+                    try :
+                        transcription_ko = response.choices[0].message.content
+                        transcription_ko = json.loads(transcription_ko)
+                    except :
+                        transcription_ko = '에러'
+                        return JsonResponse({'error': '한글자막 에러'}, status=400)
 
                 if not Video.objects.filter(user_id=user_id, video_identify=video_id).exists():
 
                     #title 정하기
-                    request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video."
+                    request_content = f"Here is the video script: {script}. Based on this script, suggest a suitable title for the video. Do not use quotation marks"
 
                     # ChatGPT 모델 호출 및 응답 받기
                     response = client.chat.completions.create(
