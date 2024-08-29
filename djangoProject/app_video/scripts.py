@@ -27,11 +27,13 @@ API_KEY=os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=API_KEY)
 
-reply_ex= ("[ {	\"text\" : sentence1, \"id_list\": [1,2,3] },{	\"text\" : sentence2, \"id_list\": [3,4] },	{	\"text\" : sentence3, \"id_list\": [5]	} ]")
-
 @csrf_exempt
 def processing_url(request):
-    data = json.loads(request.body.decode('utf-8'))
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError as e:
+        return JsonResponse({'error': f'Invalid JSON format: {e}'}, status=400)
+
     if request.method == 'POST':
         url = data.get("url")
         user_id = data.get("user_id")
@@ -49,7 +51,7 @@ def processing_url(request):
                 else :
                     print('영어 자막 없음')#영어 자막 없는 경우
                     # YouTube에서 오디오 스트림 다운로드
-                    audio_file_path = download_audio_yt_dlp(url)
+                    audio_file_path = download_audio_yt_dlp(url, video_id)
                     # 오디오 파일 열기
                     audio_file = open(audio_file_path, "rb")
 
@@ -60,15 +62,13 @@ def processing_url(request):
                         response_format="verbose_json"  # 형식 start, end(srt는 00분 00초부터 00분 07초까지)
                     )
                     transcription_en=[]
+
                     for content in response.segments :
                         text = content['text']
                         start = content['start']
                         end = content['end']
                         duration = end - start
                         transcription_en.append({'text': text, 'start': start, 'duration': duration})
-
-                for i in range(len(transcription_en)) :
-                    transcription_en[i]['id']=i
 
                 script = ' '.join([content['text'] for content in transcription_en])
                 script = separate_caption(script)
@@ -84,19 +84,21 @@ def processing_url(request):
                     response = client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "system", "content": f'{transcription_en} Translate only the values corresponding to \'text\' into Korean.'},
+                            {
+                             "role": "system", "content": "You are a translation assistant."
+                            },
+                            {"role": "user", "content": f'{transcription_en} Please translate the \'text\' fields in the following JSON from English to Korean. Keep the \'start\' and \'duration\' fields unchanged. Return the result as a JSON object.'},
                         ],
                         temperature=0.7,
                         max_tokens= 4096,
                     )
                     # 응답에서 번역된 문장 추출
-                    transcription_ko = response.choices[0].message.content
-                    print(transcription_ko)
-                    transcription_ko = json.loads('"'+transcription_ko+'"')
-
-                    json_string = transcription_ko.replace("'", '"')
-
-                    transcription_ko = json.loads(json_string)
+                    try :
+                        transcription_ko = response.choices[0].message.content
+                        transcription_ko = json.loads(transcription_ko)
+                    except :
+                        transcription_ko = '에러'
+                        return JsonResponse({'error': '한글자막 에러'}, status=400)
 
                 if not Video.objects.filter(user_id=user_id, video_identify=video_id).exists():
 
@@ -156,7 +158,8 @@ def get_youtube_video_id(url):
         return None
 
 
-def download_audio_yt_dlp(youtube_url, output_path='audio.mp3'):
+def download_audio_yt_dlp(youtube_url, video_id):
+    output_path = f"audio_{video_id}"
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -172,7 +175,7 @@ def download_audio_yt_dlp(youtube_url, output_path='audio.mp3'):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([youtube_url])
         print(f"오디오 다운로드 완료: {output_path}")
-        return output_path
+        return output_path+'.mp3'
     except youtube_dl.utils.DownloadError as e:
         print(f"오디오 다운로드 중 오류 발생: {e}")
         return None
