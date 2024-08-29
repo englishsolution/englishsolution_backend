@@ -75,9 +75,10 @@ def all_sentence_quiz(request):
     if request.method == 'POST':
         user_id=data.get("user_id")
         video_id=data.get("video_id")
-        sentences=''
-        #문장이 없는 경우
-        count=Sentence.objects.filter(video_id=video_id).count()
+
+        video_ids = Video.objects.filter(user_id=user_id).values_list('video_id', flat=True)
+        count = Sentence.objects.filter(video__video_id__in=video_ids).count()
+
         if(count==0):
             return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count<=10):
@@ -103,7 +104,7 @@ def all_sentence_quiz(request):
         json_quiz = json.loads(response_text)
 
         #마지막 quiz_id
-        last_quiz_id = Quiz.objects.order_by('-video_id').values_list('video_id', flat=True).first()
+        last_quiz_id = Quiz.objects.order_by('-quiz_id').values_list('quiz_id', flat=True).first()
         if(last_quiz_id==None):
             last_quiz_id=0
         #quiz, sentence_quiz 테이블에 저장
@@ -130,7 +131,8 @@ def all_sentence_quiz(request):
             latest_quiz_id = SentenceQuiz.objects.latest('sentence_quiz_id').sentence_quiz_id
             quiz_id_list.append(latest_quiz_id)
         return JsonResponse({'json_quiz': json_quiz,
-                             'quiz_id_list': quiz_id_list})
+                             'quiz_id_list': quiz_id_list,
+                             'quiz_id': last_quiz_id+1})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
@@ -139,9 +141,10 @@ def all_word_quiz(request):
     if request.method == 'POST':
         user_id = data.get("user_id")
         video_id = data.get("video_id")
-        words=''
-        # 단어가 없는 경우
-        count = Word.objects.filter(video_id=video_id).count()
+
+        video_ids = Video.objects.filter(user_id=user_id).values_list('video_id', flat=True)
+        count = Word.objects.filter(video__video_id__in=video_ids).count()
+
         if (count == 0):
             return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count <= 10):
@@ -167,7 +170,7 @@ def all_word_quiz(request):
         json_quiz = json.loads(response_text)
 
         # 마지막 quiz_id
-        last_quiz_id = Quiz.objects.order_by('-video_id').values_list('video_id', flat=True).first()
+        last_quiz_id = Quiz.objects.order_by('-quiz_id').values_list('quiz_id', flat=True).first()
         if (last_quiz_id == None):
             last_quiz_id = 0
         # quiz, sentence_quiz 테이블에 저장
@@ -193,7 +196,8 @@ def all_word_quiz(request):
             latest_quiz_id = WordQuiz.objects.latest('word_quiz_id').word_quiz_id
             quiz_id_list.append(latest_quiz_id)
         return JsonResponse({'json_quiz': json_quiz,
-                             'quiz_id_list': quiz_id_list})
+                             'quiz_id_list': quiz_id_list,
+                             'quiz_id': last_quiz_id+1})
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
@@ -230,6 +234,7 @@ def replay_quiz(request):
         }, status=200)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+
 @csrf_exempt
 def quiz_result(request):
     data = json.loads(request.body.decode('utf-8'))
@@ -237,12 +242,23 @@ def quiz_result(request):
         try :
             sentence_id_list=data.get("sentence_id_list")
             word_id_list=data.get("word_id_list")
+            mode=data.get("mode")
+            quiz_id=data.get("quiz_id")
+
+
+            if mode!='replay' :
+                answer_per = 0
+                if len(sentence_id_list)==0 and len(word_id_list)>0:
+                    answer_per = len(word_id_list)/WordQuiz.objects.filter(quiz_0=quiz_id).count()
+                elif len(word_id_list)==0 and len(sentence_id_list)>0 :
+                    answer_per = len(sentence_id_list) / SentenceQuiz.objects.filter(quiz_0 = quiz_id).count()
+                Quiz.objects.filter(quiz_id=quiz_id).update(answer_per=answer_per*100)
 
             WordQuiz.objects.filter(word_quiz_id__in=word_id_list).update(is_wrong=0)
             SentenceQuiz.objects.filter(sentence_quiz_id__in=sentence_id_list).update(is_wrong=0)
+
             return JsonResponse({
-                'sentence_id_list': sentence_id_list,
-                'word_id_list': word_id_list
+                'message':'반영완료'
             }, status=200)
         except Exception as e:
             return JsonResponse({'error': 'Invalid request method'}, status=400)
