@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import os
 
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import re
 
 import yt_dlp as youtube_dl
@@ -44,7 +44,7 @@ def processing_url(request):
 
                 try:
                     transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                except json.JSONDecodeError as e:
+                except TranscriptsDisabled:
                     print("자막 없음88888888888")
                     return JsonResponse({'error': '자막 없음'}, status=400)
 
