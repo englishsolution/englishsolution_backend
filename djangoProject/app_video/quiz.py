@@ -55,6 +55,7 @@ request_content_sentence = (
     f"Ensure that each sentence you generate has exactly one blank space represented by an underscore (_). "
     f"The blank should be placed where a key word is missing. "
     f"Return the result as JSON in the format shown in the example."
+    f"The number of sentences and the number of questions should be the same"
 )
 
 
@@ -74,9 +75,10 @@ def all_sentence_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
         user_id=data.get("user_id")
-        video_id=data.get("video_id")
+        video_identify=data.get("video_identify")
 
-        video_ids = Video.objects.filter(user_id=user_id).values_list('video_id', flat=True)
+        video_id = Video.objects.filter(video_identify=video_identify).values_list('video_id', flat=True).first()
+        video_ids = Video.objects.filter(user_id=user_id, video_id = video_id).values_list('video_id', flat=True)
         count = Sentence.objects.filter(video__video_id__in=video_ids).count()
 
         if(count==0):
@@ -140,9 +142,10 @@ def all_word_quiz(request):
     data = json.loads(request.body.decode('utf-8'))
     if request.method == 'POST':
         user_id = data.get("user_id")
-        video_id = data.get("video_id")
+        video_identify = data.get("video_identify")
 
-        video_ids = Video.objects.filter(user_id=user_id).values_list('video_id', flat=True)
+        video_id = Video.objects.filter(video_identify=video_identify).values_list('video_id', flat=True).first()
+        video_ids = Video.objects.filter(user_id=user_id, video_id=video_id).values_list('video_id', flat=True)
         count = Word.objects.filter(video__video_id__in=video_ids).count()
 
         if (count == 0):
