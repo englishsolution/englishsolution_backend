@@ -77,7 +77,7 @@ def all_sentence_quiz(request):
         video_id=data.get("video_id")
         sentences=''
         #문장이 없는 경우
-        count=Sentence.objects.count()
+        count=Sentence.objects.filter(video_id=video_id).count()
         if(count==0):
             return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count<=10):
@@ -140,8 +140,8 @@ def all_word_quiz(request):
         user_id = data.get("user_id")
         video_id = data.get("video_id")
         words=''
-        # 문장이 없는 경우
-        count = Word.objects.count()
+        # 단어가 없는 경우
+        count = Word.objects.count(video_id=video_id)
         if (count == 0):
             return JsonResponse({'error': '저장된 문장이 없음'}, status=400)
         elif (count <= 10):
