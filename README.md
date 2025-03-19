@@ -47,8 +47,9 @@ AI 및 빅데이터를 활용한 외국어 학습 플랫폼
   <tbody>
     <tr>
       <td>
-        <p align="center"> 22.07.06 발표 </p>
-        <a href="https://youtu.be/ByeAqd8mwyg" title="AI 및 빅데이터를 활용한 외국어 학습 플랫폼 발표">
+        <p align="center"> 24.09.31 발표 </p>
+        <a href="https://www.youtube.com/watch?v=-UBy-KnmZs4" target="_blank">
+        <img src="https://img.icons8.com/ios-filled/50/youtube.png" alt="YouTube Icon" class="icon">
         </a>
       </td>
     </tr>
