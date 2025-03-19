@@ -48,7 +48,7 @@ AI 및 빅데이터를 활용한 외국어 학습 플랫폼
     <tr>
       <td>
         <p align="center"> 24.09.31 발표 </p>
-        <a href="https://www.youtube.com/watch?v=-UBy-KnmZs4" target="_blank">
+        <a href="https://youtu.be/ByeAqd8mwyg" target="_blank">
         <img src="https://img.icons8.com/ios-filled/50/youtube.png" alt="YouTube Icon" class="icon">
         </a>
       </td>
