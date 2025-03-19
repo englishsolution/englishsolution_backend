@@ -36,6 +36,21 @@ AI 및 빅데이터를 활용한 외국어 학습 플랫폼
 # 📊 ERD
 
 <details>
+  <summary>ERD</summary>
+  <img src="https://github.com/user-attachments/assets/e758c9f9-eed9-4275-a737-04869220eaba" width="800px"/>
 </details>
 
 <br />
+
+# 📹 발표영상
+<table>
+  <tbody>
+    <tr>
+      <td>
+        <p align="center"> 22.07.06 발표 </p>
+        <a href="https://youtu.be/ByeAqd8mwyg" title="AI 및 빅데이터를 활용한 외국어 학습 플랫폼 발표">
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
